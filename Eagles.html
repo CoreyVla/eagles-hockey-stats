@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eagles U9 2025 Hockey Stat Keeper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #152238;
+            color: #CBD5E0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better mobile view */
+            min-height: 100vh;
+            padding: 1rem;
+            background-image: url('https://images.unsplash.com/photo-1627448834015-46793f18a221?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .container {
+            background-color: rgba(28, 40, 56, 0.95);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        .tab-button {
+            background-color: #334155;
+            color: #E2E8F0;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.75rem;
+            font-weight: 600;
+        }
+        .tab-button.active {
+            background-color: #FFD700; /* Gold */
+            color: #0A2342; /* Navy */
+            transform: translateY(-4px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .player-button {
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            background-color: #334155;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .player-button:hover {
+            background-color: #475569;
+            transform: scale(1.02);
+        }
+        .player-button.selected {
+            background-color: #FFD700; /* Gold */
+            color: #0A2342; /* Navy */
+            border: 2px solid #FFC72C; /* Darker Gold */
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .box-score-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .box-score-table th, .box-score-table td {
+            border: 1px solid #475569;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        .box-score-table th {
+            background-color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        .box-score-table tr:hover {
+            background-color: #1E293B;
+        }
+        .add-player-btn {
+            background-color: #0A2342; /* Navy */
+            color: white;
+            border: 1px solid #FFD700; /* Gold border */
+            transition: background-color 0.2s;
+            border-radius: 0.75rem;
+        }
+        .add-player-btn:hover {
+            background-color: #003366; /* Lighter Navy */
+        }
+        .finalize-btn {
+            background-color: #FFD700; /* Gold */
+            color: #0A2342; /* Navy */
+            transition: background-color 0.2s;
+            border-radius: 0.75rem;
+            font-weight: bold;
+        }
+        .finalize-btn:hover {
+            background-color: #FFC72C; /* Darker Gold */
+        }
+        .start-game-btn {
+            background-color: #10B981; /* Green */
+            color: white;
+            transition: background-color 0.2s;
+            border-radius: 0.75rem;
+            font-weight: bold;
+        }
+        .start-game-btn:hover {
+            background-color: #059669; /* Darker Green */
+        }
+        .input-field {
+            background-color: #1E293B;
+            color: #E2E8F0;
+            border: 1px solid #475569;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+        }
+        .stat-btn {
+            background-color: #E2E8F0;
+            color: #1E293B;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .stat-btn:hover {
+            background-color: #CBD5E0;
+        }
+        .feedback-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background-color: rgba(34, 197, 94, 0.95);
+            color: white;
+            padding: 2.5rem 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7);
+            z-index: 5000;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            width: 90%;
+            max-width: 450px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        .feedback-message.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            animation: attention-shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes attention-shake {
+          10%, 90% {
+            transform: translate(-50%, -50%) translate3d(-1px, 0, 0) scale(1);
+          }
+          20%, 80% {
+            transform: translate(-50%, -50%) translate3d(2px, 0, 0) scale(1);
+          }
+          30%, 50%, 70% {
+            transform: translate(-50%, -50%) translate3d(-4px, 0, 0) scale(1);
+          }
+          40%, 60% {
+            transform: translate(-50%, -50%) translate3d(4px, 0, 0) scale(1);
+          }
+        }
+        .undo-btn {
+            background-color: #DC2626;
+            color: white;
+            transition: background-color 0.2s;
+            border-radius: 0.75rem;
+        }
+        .undo-btn:hover {
+            background-color: #B91C1C;
+        }
+        .locked-message {
+            background-color: rgba(220, 38, 38, 0.9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        .delete-player-btn {
+            background-color: #DC2626;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1;
+            margin-left: 0.5rem;
+        }
+        .edit-player-button {
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.75rem;
+            background-color: #334155;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            position: relative;
+        }
+        .edit-player-button:hover {
+            background-color: #475569;
+            transform: scale(1.02);
+        }
+        .edit-player-button.editing {
+            outline: 3px solid #FFD700; /* Gold */
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            .box-score-table th, .box-score-table td {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.8rem;
+            }
+            .player-button, .stat-btn {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+            .stat-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Pop-up messages are moved here to be direct children of body -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+    <div id="feedbackMessage" class="feedback-message"></div>
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="bg-[#1E293B] p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <p id="confirmationMessage" class="mb-4 text-lg">Are you sure?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirmYes" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Yes</button>
+                <button id="confirmNo" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="flex justify-center items-center gap-4 mb-4">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTXJH833dvx35-PR_IazkL2eHKlU9h2ILsiXQ&s" alt="Eagles Logo" class="h-12 sm:h-16">
+            <h1 class="text-2xl sm:text-3xl font-bold text-center text-white">Eagles U9 2025</h1>
+        </div>
+        
+        <div class="flex space-x-2 sm:space-x-4 overflow-x-auto pb-2">
+            <button id="gameManagementTab" class="tab-button px-4 py-2 sm:px-6 sm:py-2 rounded-lg active whitespace-nowrap">Game Mgmt</button>
+            <button id="setupTab" class="tab-button px-4 py-2 sm:px-6 sm:py-2 rounded-lg whitespace-nowrap">Setup</button>
+            <button id="inGameTab" class="tab-button px-4 py-2 sm:px-6 sm:py-2 rounded-lg whitespace-nowrap">In-Game</button>
+            <button id="allTimeStatsTab" class="tab-button px-4 py-2 sm:px-6 sm:py-2 rounded-lg whitespace-nowrap">All-Time Stats</button>
+            <button id="aiSummaryTab" class="tab-button px-4 py-2 sm:px-6 sm:py-2 rounded-lg whitespace-nowrap">AI Summary</button>
+        </div>
+
+        <div id="gameManagementSection">
+            <h2 class="text-xl font-semibold mb-4">Manage Games</h2>
+            <div class="mb-6 flex flex-col space-y-4">
+                <div>
+                    <h3 class="font-bold mb-2">Create New Game</h3>
+                    <p class="text-sm text-gray-400 mb-2">Enter game details and click "Create".</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <input type="text" id="opponentInputCreate" class="input-field" placeholder="Opponent Name">
+                        <input type="date" id="dateInputCreate" class="input-field">
+                        <input type="time" id="timeInputCreate" class="input-field">
+                        <button id="createGameButton" class="add-player-btn px-4 py-2 rounded-lg col-span-1 md:col-span-2 lg:col-span-1">Create New Game</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-2">Load Existing Game</h3>
+                    <p class="text-sm text-gray-400 mb-2">Select a saved game to load it.</p>
+                    <div class="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
+                        <select id="loadGameIdSelect" class="input-field w-full md:w-2/3"></select>
+                        <button id="loadGameButton" class="stat-btn w-full md:w-1/3">Load Game</button>
+                    </div>
+                </div>
+            </div>
+            <p id="currentGameInfo" class="text-center font-semibold text-lg text-gray-300">No game loaded. Create or load a game to begin.</p>
+        </div>
+
+        <div id="setupSection" class="hidden">
+            <div class="game-info-section mb-8">
+                <h2 class="text-xl font-semibold mb-2">Game Info</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="text" id="opponentInput" class="input-field" placeholder="Opponent">
+                    <input type="date" id="dateInput" class="input-field">
+                    <input type="time" id="timeInput" class="input-field">
+                    <input type="text" id="locationInput" class="input-field" placeholder="Location">
+                </div>
+            </div>
+            <div class="player-roster">
+                <h2 class="text-xl font-semibold mb-2">Add/Update Players</h2>
+                <div class="mt-4 flex flex-col space-y-2">
+                    <input type="text" id="addPlayerNameInput" class="input-field w-full" placeholder="Player Name">
+                    <div class="flex space-x-2">
+                        <input type="text" id="addPlayerNumberInput" class="input-field w-1/3" placeholder="Number">
+                        <input type="text" id="addPlayerPositionInput" class="input-field w-2/3" placeholder="Position (e.g., C, LW, G)">
+                    </div>
+                    <button id="addPlayerButton" class="add-player-btn px-4 py-2 rounded-lg">Add Player</button>
+                </div>
+                <div id="playersListSetup" class="min-h-[10rem] bg-[#1E293B] p-4 rounded-lg mt-4 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <p class="text-gray-400 text-center col-span-full">Added players will appear here.</p>
+                </div>
+            </div>
+             <div class="mt-6 flex justify-center">
+                <button id="startGameButton" class="start-game-btn px-6 py-3 text-lg font-bold rounded-full">Start Game</button>
+            </div>
+        </div>
+
+        <div id="inGameSection" class="hidden">
+            <div class="roster-and-stats mb-8">
+                <h2 class="text-xl font-semibold mb-2">Player Roster (Tap to Select)</h2>
+                <div id="playersListInGame" class="min-h-[10rem] bg-[#1E293B] p-4 rounded-lg overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <p class="text-gray-400 text-center col-span-full">Players will appear here.</p>
+                </div>
+                <div id="lockedMessage" class="hidden locked-message">This game is locked and cannot be edited.</div>
+                <div id="statButtonsContainer" class="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 stat-grid">
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Goals">Goals 🏒</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Assists">Assists 🤝</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="ShotsOnGoal">SOG 🎯</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="MissedShots">Missed 💥</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Plus">+1 ✅</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Minus">-1 ❌</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Penalties">Penalties 🚨</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Takeaways">Takeaways 👊</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Saves">Saves 🥅</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="Blocks">Blocks 🛡️</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="FaceoffWins">FOW 🎉</button>
+                    <button class="stat-btn px-4 py-2 rounded-lg" data-stat-type="FaceoffLosses">FOL 😩</button>
+                </div>
+                <div class="mt-4 flex justify-center">
+                    <button id="undoButton" class="undo-btn px-6 py-2 rounded-lg">Undo Last Stat</button>
+                </div>
+            </div>
+            <div class="box-score">
+                <h2 class="text-xl font-semibold mb-2">Box Score</h2>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2">Player</th>
+                                <th class="px-4 py-2 text-center">Num</th>
+                                <th class="px-4 py-2 text-center">Pos</th>
+                                <th class="px-4 py-2 text-center">G</th>
+                                <th class="px-4 py-2 text-center">A</th>
+                                <th class="px-4 py-2 text-center">SOG</th>
+                                <th class="px-4 py-2 text-center">MS</th>
+                                <th class="px-4 py-2 text-center">+/-</th>
+                                <th class="px-4 py-2 text-center">PIM</th>
+                                <th class="px-4 py-2 text-center">TKA</th>
+                                <th class="px-4 py-2 text-center">Saves</th>
+                                <th class="px-4 py-2 text-center">Blocks</th>
+                                <th class="px-4 py-2 text-center">FOW</th>
+                                <th class="px-4 py-2 text-center">FOL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boxScoreBody">
+                            <tr><td colspan="14" class="text-center text-gray-400">No stats yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <button id="finalizeGameButton" class="finalize-btn px-6 py-3 text-lg font-bold rounded-full">Finalize Game</button>
+            </div>
+        </div>
+
+        <div id="allTimeStatsSection" class="hidden">
+            <div class="box-score">
+                <h2 class="text-xl font-semibold mb-2">All-Time Totals</h2>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2">Player</th>
+                                <th class="px-4 py-2 text-center">Games</th>
+                                <th class="px-4 py-2 text-center">G</th>
+                                <th class="px-4 py-2 text-center">A</th>
+                                <th class="px-4 py-2 text-center">SOG</th>
+                                <th class="px-4 py-2 text-center">MS</th>
+                                <th class="px-4 py-2 text-center">+/-</th>
+                                <th class="px-4 py-2 text-center">PIM</th>
+                                <th class="px-4 py-2 text-center">TKA</th>
+                                <th class="px-4 py-2 text-center">Saves</th>
+                                <th class="px-4 py-2 text-center">Blocks</th>
+                                <th class="px-4 py-2 text-center">FOW</th>
+                                <th class="px-4 py-2 text-center">FOL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTimeTotalsBody">
+                            <tr><td colspan="13" class="text-center text-gray-400">No stats yet. Finalize a game to see totals.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="box-score mt-8">
+                <h2 class="text-xl font-semibold mb-2">All-Time Averages</h2>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2">Player</th>
+                                <th class="px-4 py-2 text-center">Games</th>
+                                <th class="px-4 py-2 text-center">G/G</th>
+                                <th class="px-4 py-2 text-center">A/G</th>
+                                <th class="px-4 py-2 text-center">SOG/G</th>
+                                <th class="px-4 py-2 text-center">MS/G</th>
+                                <th class="px-4 py-2 text-center">+/-/G</th>
+                                <th class="px-4 py-2 text-center">PIM/G</th>
+                                <th class="px-4 py-2 text-center">TKA/G</th>
+                                <th class="px-4 py-2 text-center">Saves/G</th>
+                                <th class="px-4 py-2 text-center">Blocks/G</th>
+                                <th class="px-4 py-2 text-center">FOW%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTimeAveragesBody">
+                            <tr><td colspan="12" class="text-center text-gray-400">No stats yet. Finalize a game to see averages.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="aiSummarySection" class="hidden">
+            <h2 class="text-xl font-semibold mb-2">AI Game Summary</h2>
+            <div class="flex justify-center mb-4">
+                <button id="generateSummaryButton" class="finalize-btn px-6 py-3 text-lg font-bold rounded-full">Generate Summary</button>
+            </div>
+            <div id="summaryOutput" class="bg-[#1E293B] p-4 rounded-lg min-h-[10rem] text-gray-300 whitespace-pre-wrap">
+                <p class="text-gray-500">Click the button to generate the game summary...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, runTransaction, collection, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLogLevel('Debug');
+
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            
+            const tabs = {
+                gameManagement: document.getElementById('gameManagementTab'),
+                setup: document.getElementById('setupTab'),
+                inGame: document.getElementById('inGameTab'),
+                allTimeStats: document.getElementById('allTimeStatsTab'),
+                aiSummary: document.getElementById('aiSummaryTab')
+            };
+            const sections = {
+                gameManagement: document.getElementById('gameManagementSection'),
+                setup: document.getElementById('setupSection'),
+                inGame: document.getElementById('inGameSection'),
+                allTimeStats: document.getElementById('allTimeStatsSection'),
+                aiSummary: document.getElementById('aiSummarySection')
+            };
+
+            const playerListSetup = document.getElementById('playersListSetup');
+            const playerListInGame = document.getElementById('playersListInGame');
+            const boxScoreBody = document.getElementById('boxScoreBody');
+            const addPlayerNameInput = document.getElementById('addPlayerNameInput');
+            const addPlayerNumberInput = document.getElementById('addPlayerNumberInput');
+            const addPlayerPositionInput = document.getElementById('addPlayerPositionInput');
+            const addPlayerButton = document.getElementById('addPlayerButton');
+            const opponentInputCreate = document.getElementById('opponentInputCreate');
+            const dateInputCreate = document.getElementById('dateInputCreate');
+            const timeInputCreate = document.getElementById('timeInputCreate');
+            const opponentInput = document.getElementById('opponentInput');
+            const dateInput = document.getElementById('dateInput');
+            const timeInput = document.getElementById('timeInput');
+            const locationInput = document.getElementById('locationInput');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const undoButton = document.getElementById('undoButton');
+            const createGameButton = document.getElementById('createGameButton');
+            const loadGameButton = document.getElementById('loadGameButton');
+            const loadGameIdSelect = document.getElementById('loadGameIdSelect');
+            const currentGameInfo = document.getElementById('currentGameInfo');
+            const allTimeTotalsBody = document.getElementById('allTimeTotalsBody');
+            const allTimeAveragesBody = document.getElementById('allTimeAveragesBody');
+            const finalizeGameButton = document.getElementById('finalizeGameButton');
+            const lockedMessage = document.getElementById('lockedMessage');
+            const statButtonsContainer = document.getElementById('statButtonsContainer');
+            const confirmationModal = document.getElementById('confirmationModal');
+            const confirmationMessage = document.getElementById('confirmationMessage');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+            const startGameButton = document.getElementById('startGameButton');
+            const generateSummaryButton = document.getElementById('generateSummaryButton');
+            const summaryOutput = document.getElementById('summaryOutput');
+
+            let playersData = {};
+            let gameDetails = {};
+            let history = [];
+            let userId = null;
+            let teamId = appId;
+            let currentGameId = null;
+            let gameDocRef = null;
+            let playersCollectionRef = null;
+            let selectedPlayers = [];
+            let editingPlayerName = null;
+            let feedbackTimeout = null;
+            let gameDataUnsubscribe = null;
+            let allTimeDataUnsubscribe = null;
+            let confirmCallback = null;
+
+            const statFields = ['Goals', 'Assists', 'ShotsOnGoal', 'MissedShots', 'plus_minus', 'Penalties', 'Takeaways', 'Saves', 'Blocks', 'FaceoffWins', 'FaceoffLosses'];
+
+            // Set default date and time for creation form
+            function populateDateTime() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                if(dateInputCreate) dateInputCreate.value = `${year}-${month}-${day}`;
+                if(timeInputCreate) timeInputCreate.value = `${hours}:${minutes}`;
+            }
+            populateDateTime();
+
+
+            // Firebase Authentication
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    playersCollectionRef = doc(db, `/artifacts/${teamId}/public/data/playerTotals/data`);
+                    loadAllTimeStats();
+                    loadGameList();
+                } else {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Error signing in: ", error);
+                    }
+                }
+            });
+            
+            // UI Functions
+            function switchTab(tab) {
+                selectedPlayers = [];
+
+                Object.values(sections).forEach(section => section.classList.add('hidden'));
+                Object.values(tabs).forEach(tabBtn => tabBtn.classList.remove('active'));
+
+                sections[tab].classList.remove('hidden');
+                tabs[tab].classList.add('active');
+
+                renderUI();
+            }
+
+            function showFeedback(message, type = 'success') {
+                clearTimeout(feedbackTimeout);
+                feedbackMessage.textContent = message;
+                feedbackMessage.style.backgroundColor = type === 'success' ? 'rgba(34, 197, 94, 0.95)' : 'rgba(220, 38, 38, 0.9)';
+                feedbackMessage.classList.add('show');
+                feedbackTimeout = setTimeout(() => {
+                    feedbackMessage.classList.remove('show');
+                }, 1500);
+            }
+
+            function showConfirmation(message, callback) {
+                confirmationMessage.textContent = message;
+                confirmationModal.classList.remove('hidden');
+                confirmCallback = callback;
+            }
+
+            function renderUI() {
+                const playerNames = Object.keys(playersData).sort((a, b) => {
+                    const lastNameA = a.split(' ').pop();
+                    const lastNameB = b.split(' ').pop();
+                    return lastNameA.localeCompare(lastNameB);
+                });
+
+                // Render Setup Section
+                playerListSetup.innerHTML = '';
+                if (playerNames.length === 0) {
+                    playerListSetup.innerHTML = '<p class="text-gray-400 text-center col-span-full">Added players will appear here.</p>';
+                } else {
+                    playerNames.forEach(name => {
+                        const player = playersData[name];
+                        const playerNumber = player.Number ? `#${player.Number}` : '';
+                        const playerElement = document.createElement('div');
+                        playerElement.classList.add('edit-player-button', 'rounded-lg', 'p-3', 'text-center', 'relative');
+                        if (name === editingPlayerName) {
+                            playerElement.classList.add('editing');
+                        }
+                        playerElement.innerHTML = `
+                            ${name} ${playerNumber}
+                            <button class="delete-player-btn absolute top-1 right-1" data-player-name="${name}">x</button>
+                        `;
+                        playerElement.dataset.playerName = name;
+                        playerListSetup.appendChild(playerElement);
+                    });
+                }
+                
+                // Render In-Game Section
+                playerListInGame.innerHTML = '';
+                if (playerNames.length === 0) {
+                    playerListInGame.innerHTML = '<p class="text-gray-400 text-center col-span-full">No players added yet. Go to the Setup tab!</p>';
+                } else {
+                    playerNames.forEach(name => {
+                        const player = playersData[name];
+                        const playerNumber = player.Number ? `#${player.Number}` : '';
+                        const playerElement = document.createElement('button');
+                        playerElement.classList.add('player-button', 'px-4', 'py-2');
+                        if (selectedPlayers.includes(name)) {
+                            playerElement.classList.add('selected');
+                        }
+                        playerElement.textContent = `${name} ${playerNumber}`;
+                        playerElement.dataset.playerName = name;
+                        if (!gameDetails.finalized) {
+                            playerElement.addEventListener('click', () => togglePlayerSelection(name, playerElement));
+                        }
+                        playerListInGame.appendChild(playerElement);
+                    });
+                }
+                
+                // Render Box Score
+                boxScoreBody.innerHTML = '';
+                if (playerNames.length === 0) {
+                    boxScoreBody.innerHTML = '<tr><td colspan="14" class="text-center text-gray-400">No stats yet.</td></tr>';
+                }
+                playerNames.forEach(name => {
+                    const player = playersData[name];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${name}</td>
+                        <td class="px-4 py-2 text-center">${player.Number || ''}</td>
+                        <td class="px-4 py-2 text-center">${player.Position || ''}</td>
+                        <td class="px-4 py-2 text-center">${player.Goals || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Assists || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.ShotsOnGoal || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.MissedShots || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.plus_minus || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Penalties || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Takeaways || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Saves || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Blocks || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.FaceoffWins || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.FaceoffLosses || 0}</td>
+                    `;
+                    boxScoreBody.appendChild(row);
+                });
+                
+                // Toggle locked state UI
+                if (gameDetails.finalized) {
+                    lockedMessage.classList.remove('hidden');
+                    const allButtons = document.querySelectorAll('#inGameSection button, #setupSection button, #setupSection input');
+                    allButtons.forEach(btn => btn.disabled = true);
+                    finalizeGameButton.disabled = true;
+                } else {
+                    lockedMessage.classList.add('hidden');
+                    const allButtons = document.querySelectorAll('#inGameSection button, #setupSection button, #setupSection input');
+                    allButtons.forEach(btn => btn.disabled = false);
+                    finalizeGameButton.disabled = false;
+                }
+            }
+
+            function updateGameInfoUI() {
+                if (opponentInput) opponentInput.value = gameDetails.opponent || '';
+                if (dateInput) dateInput.value = gameDetails.date || '';
+                if (timeInput) timeInput.value = gameDetails.time || '';
+                if (locationInput) locationInput.value = gameDetails.location || '';
+                if (currentGameInfo) {
+                    currentGameInfo.textContent = currentGameId ? `Current Game: ${gameDetails.date} vs ${gameDetails.opponent}` : 'No game loaded. Create or load a game to begin.';
+                }
+            }
+
+            function renderAllTimeStats(allTimeData) {
+                const playerNames = Object.keys(allTimeData.players || {}).sort((a, b) => {
+                    const lastNameA = a.split(' ').pop();
+                    const lastNameB = b.split(' ').pop();
+                    return lastNameA.localeCompare(lastNameB);
+                });
+                allTimeTotalsBody.innerHTML = '';
+                allTimeAveragesBody.innerHTML = '';
+
+                if (playerNames.length === 0) {
+                     allTimeTotalsBody.innerHTML = '<tr><td colspan="13" class="text-center text-gray-400">No stats yet. Finalize a game to see totals.</td></tr>';
+                     allTimeAveragesBody.innerHTML = '<tr><td colspan="12" class="text-center text-gray-400">No stats yet. Finalize a game to see averages.</td></tr>';
+                } else {
+                    playerNames.forEach(name => {
+                        const player = allTimeData.players[name];
+                        const totalRow = document.createElement('tr');
+                        totalRow.innerHTML = `
+                            <td class="px-4 py-2">${name}</td>
+                            <td class="px-4 py-2 text-center">${player.gamesPlayed || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Goals || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Assists || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.ShotsOnGoal || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.MissedShots || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.plus_minus || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Penalties || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Takeaways || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Saves || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.Blocks || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.FaceoffWins || 0}</td>
+                            <td class="px-4 py-2 text-center">${player.FaceoffLosses || 0}</td>
+                        `;
+                        allTimeTotalsBody.appendChild(totalRow);
+                        
+                        const avgRow = document.createElement('tr');
+                        const gamesPlayed = player.gamesPlayed || 0;
+                        const fow = player.FaceoffWins || 0;
+                        const fol = player.FaceoffLosses || 0;
+                        const fowPercentage = (fow + fol) > 0 ? ((fow / (fow + fol)) * 100).toFixed(1) + '%' : '0.0%';
+
+                        avgRow.innerHTML = `
+                            <td class="px-4 py-2">${name}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Goals / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Assists / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.ShotsOnGoal / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.MissedShots / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.plus_minus / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Penalties / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Takeaways / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Saves / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${gamesPlayed > 0 ? (player.Blocks / gamesPlayed).toFixed(2) : '0.00'}</td>
+                            <td class="px-4 py-2 text-center">${fowPercentage}</td>
+                        `;
+                        allTimeAveragesBody.appendChild(avgRow);
+                    });
+                }
+            }
+
+            // Firebase Logic
+            async function loadGame(gameId) {
+                if (gameDataUnsubscribe) {
+                    gameDataUnsubscribe();
+                }
+                currentGameId = gameId;
+                gameDocRef = doc(db, `/artifacts/${teamId}/public/data/games/${currentGameId}`);
+                
+                gameDataUnsubscribe = onSnapshot(gameDocRef, (docSnap) => {
+                    if (loadingSpinner) {
+                        loadingSpinner.classList.add('hidden');
+                    }
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        playersData = data.players || {};
+                        gameDetails = data.gameDetails || {};
+                        history = data.history || [];
+                        updateGameInfoUI();
+                    } else {
+                        playersData = {};
+                        gameDetails = { opponent: '', date: '', time: '', location: '' };
+                        history = [];
+                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, history: history });
+                    }
+                    renderUI();
+                }, (error) => {
+                    console.error("Error getting real-time game data: ", error);
+                    if (loadingSpinner) {
+                        loadingSpinner.classList.add('hidden');
+                    }
+                });
+                updateGameInfoUI();
+            }
+            
+            async function loadGameList() {
+                const gamesCollectionRef = collection(db, `/artifacts/${teamId}/public/data/games`);
+                const querySnapshot = await getDocs(gamesCollectionRef);
+                const games = [];
+                querySnapshot.forEach(doc => {
+                    games.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort games by date, most recent first
+                games.sort((a, b) => {
+                    const dateA = new Date(`${a.gameDetails.date}T${a.gameDetails.time}`);
+                    const dateB = new Date(`${b.gameDetails.date}T${b.gameDetails.time}`);
+                    return dateB - dateA;
+                });
+
+                loadGameIdSelect.innerHTML = '<option value="">-- Select a Game --</option>'; // Clear and add placeholder
+                games.forEach(game => {
+                    const option = document.createElement('option');
+                    option.value = game.id;
+                    const finalized = game.gameDetails?.finalized ? ' [LOCKED]' : '';
+                    option.textContent = `${game.gameDetails.date} vs ${game.gameDetails.opponent}${finalized}`;
+                    loadGameIdSelect.appendChild(option);
+                });
+            }
+
+            async function loadAllTimeStats() {
+                if (allTimeDataUnsubscribe) {
+                    allTimeDataUnsubscribe();
+                }
+                const allTimeDocRef = doc(db, `/artifacts/${teamId}/public/data/playerTotals/data`);
+                allTimeDataUnsubscribe = onSnapshot(allTimeDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const allTimeData = docSnap.data() || {};
+                        renderAllTimeStats(allTimeData);
+                    } else {
+                        renderAllTimeStats({});
+                    }
+                }, (error) => {
+                    console.error("Error getting all-time data:", error);
+                });
+            }
+            
+            async function getDefaultRoster() {
+                const defaultRoster = {
+                    "John Bitter": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "James Edelen": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Jaxon Engle": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Sammy Garavaglia": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Jackson Gilkeson": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Noah Gones": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Brayden Parr": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Andrew Tarantola": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Elijah Underwood": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Baylor Vasel": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Brycen Walker": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Bryce Waltenberger": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "August Winter": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                    "Leighton Wood": { "Number": "", "Position": "", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Saves": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0 },
+                };
+                return defaultRoster;
+            }
+
+            async function createNewGame() {
+                if (!userId) return;
+                const opponent = opponentInputCreate.value.trim();
+                const date = dateInputCreate.value;
+
+                if (!opponent || !date) {
+                    showFeedback('Please fill in opponent and date.', 'error');
+                    return;
+                }
+
+                const newGameId = `${date}-${opponent.replace(/\s+/g, '-')}`;
+                const newGameRef = doc(db, `/artifacts/${teamId}/public/data/games/${newGameId}`);
+                
+                const existingGame = await getDoc(newGameRef);
+                if (existingGame.exists()) {
+                    showFeedback('A game with this ID already exists. Please choose a different date or opponent name.', 'error');
+                    return;
+                }
+                
+                const initialRoster = await getDefaultRoster();
+
+                await setDoc(newGameRef, {
+                    gameDetails: { opponent: opponent, date: date, time: timeInputCreate.value, location: '', finalized: false },
+                    players: initialRoster,
+                    history: []
+                });
+                showFeedback(`New game created!`);
+                loadGame(newGameId);
+                loadGameList();
+                switchTab('setup');
+            }
+
+            async function updateGameDetails(field, value) {
+                if (!userId || !gameDocRef || gameDetails.finalized) return;
+                gameDetails[field] = value;
+                await updateDoc(gameDocRef, {
+                    [`gameDetails.${field}`]: value
+                });
+            }
+            if (opponentInput) opponentInput.addEventListener('input', (e) => updateGameDetails('opponent', e.target.value));
+            if (dateInput) dateInput.addEventListener('input', (e) => updateGameDetails('date', e.target.value));
+            if (timeInput) timeInput.addEventListener('input', (e) => updateGameDetails('time', e.target.value));
+            if (locationInput) locationInput.addEventListener('input', (e) => updateGameDetails('location', e.target.value));
+
+            async function updateStatsForSelectedPlayers(statType) {
+                if (gameDetails.finalized) {
+                    showFeedback('This game is locked and cannot be edited.', 'error');
+                    return;
+                }
+                if (selectedPlayers.length === 0) {
+                    showFeedback('No players selected.', 'error');
+                    return;
+                }
+                if (!gameDocRef) {
+                    showFeedback('No game loaded.', 'error');
+                    return;
+                }
+
+                const updates = {};
+                const historyEntry = {
+                    timestamp: new Date().toISOString(),
+                    actions: []
+                };
+
+                selectedPlayers.forEach(playerName => {
+                    let fieldToUpdate = '';
+                    let incrementValue = 1;
+
+                    if (statType === 'Plus') {
+                        fieldToUpdate = 'plus_minus';
+                    } else if (statType === 'Minus') {
+                        fieldToUpdate = 'plus_minus';
+                        incrementValue = -1;
+                    } else {
+                        fieldToUpdate = statType;
+                    }
+
+                    const currentStatValue = playersData[playerName]?.[fieldToUpdate] || 0;
+                    updates[`players.${playerName}.${fieldToUpdate}`] = currentStatValue + incrementValue;
+                    
+                    historyEntry.actions.push({
+                        playerName: playerName,
+                        statType: fieldToUpdate,
+                        increment: incrementValue,
+                        valueBefore: currentStatValue
+                    });
+                });
+                
+                await updateDoc(gameDocRef, {
+                    ...updates,
+                    history: [...history, historyEntry]
+                });
+                
+                const statDisplayMap = {
+                    'Goals': 'Goal', 'Assists': 'Assist', 'ShotsOnGoal': 'Shot on Goal',
+                    'MissedShots': 'Missed Shot', 'Plus': '+1', 'Minus': '-1', 'Penalties': 'Penalty',
+                    'Takeaways': 'Takeaway', 'Saves': 'Save', 'Blocks': 'Block',
+                    'FaceoffWins': 'Faceoff Win', 'FaceoffLosses': 'Faceoff Loss'
+                };
+
+                const statName = statDisplayMap[statType] || statType;
+                const playerNamesString = selectedPlayers.join(', ');
+                const feedbackText = `${statName} for ${playerNamesString}`;
+                
+                showFeedback(feedbackText);
+                selectedPlayers = [];
+                renderUI();
+            }
+
+            async function undoLastAction() {
+                if (gameDetails.finalized) {
+                    showFeedback('This game is locked and cannot be edited.', 'error');
+                    return;
+                }
+                if (!gameDocRef) {
+                    showFeedback('No game loaded.', 'error');
+                    return;
+                }
+                if (history.length === 0) {
+                    showFeedback('No actions to undo.', 'error');
+                    return;
+                }
+
+                const lastHistoryEntry = history.pop();
+                const updates = {};
+                let undonePlayers = new Set();
+
+                lastHistoryEntry.actions.forEach(action => {
+                    const { playerName, statType, valueBefore } = action;
+                    updates[`players.${playerName}.${statType}`] = valueBefore;
+                    undonePlayers.add(playerName);
+                });
+
+                try {
+                    await updateDoc(gameDocRef, {
+                        ...updates,
+                        history: history
+                    });
+                    showFeedback(`Undid last action for ${Array.from(undonePlayers).join(', ')}.`);
+                } catch (e) {
+                    console.error("Error undoing action:", e);
+                    showFeedback('Failed to undo action.', 'error');
+                }
+                selectedPlayers = [];
+                renderUI();
+            }
+
+            async function finalizeGame() {
+                if (!currentGameId || !gameDocRef || gameDetails.finalized) {
+                    showFeedback('Game is already finalized or not loaded.', 'error');
+                    return;
+                }
+                
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const allTimeDocRef = doc(db, `/artifacts/${teamId}/public/data/playerTotals/data`);
+                        const allTimeDoc = await transaction.get(allTimeDocRef);
+                        const allTimeData = allTimeDoc.data() || { players: {}, games: {} };
+
+                        const players = allTimeData.players;
+                        const games = allTimeData.games;
+
+                        if (games[currentGameId]) {
+                            showFeedback('Game is already finalized.', 'error');
+                            throw new Error('Game already finalized');
+                        }
+
+                        // Update totals for each player
+                        for (const playerName in playersData) {
+                            const playerGameStats = playersData[playerName];
+                            if (!players[playerName]) {
+                                players[playerName] = { gamesPlayed: 0 };
+                                statFields.forEach(stat => players[playerName][stat] = 0);
+                            }
+
+                            players[playerName].gamesPlayed = (players[playerName].gamesPlayed || 0) + 1;
+                            statFields.forEach(stat => {
+                                if (playerGameStats[stat] !== undefined) {
+                                    players[playerName][stat] = (players[playerName][stat] || 0) + playerGameStats[stat];
+                                }
+                            });
+                        }
+                        
+                        // Add game to finalized list
+                        games[currentGameId] = {
+                            date: gameDetails.date,
+                            opponent: gameDetails.opponent,
+                            players: Object.keys(playersData).length,
+                            finalized: true
+                        };
+                        
+                        transaction.update(gameDocRef, {
+                            'gameDetails.finalized': true
+                        });
+
+                        transaction.set(allTimeDocRef, { players, games });
+                    });
+                    showFeedback('Game finalized and locked!');
+                    loadGameList();
+                    
+                } catch (e) {
+                    if (e.message !== 'Game already finalized') {
+                        console.error("Transaction failed: ", e);
+                        showFeedback('Failed to finalize game.', 'error');
+                    }
+                }
+            }
+
+            async function deletePlayer(playerName) {
+                if (!currentGameId || gameDetails.finalized) {
+                    showFeedback('Game is locked. Cannot delete players.', 'error');
+                    return;
+                }
+                if (Object.keys(playersData).length === 1) {
+                    showFeedback('Cannot delete the last player. You must have at least one player in a game.', 'error');
+                    return;
+                }
+                try {
+                    await updateDoc(gameDocRef, {
+                        [`players.${playerName}`]: deleteField()
+                    });
+                    showFeedback(`${playerName} deleted from the roster.`);
+                } catch (e) {
+                    console.error("Error deleting player: ", e);
+                    showFeedback('Failed to delete player.', 'error');
+                }
+            }
+
+            function togglePlayerSelection(playerName, element) {
+                const index = selectedPlayers.indexOf(playerName);
+                if (index > -1) {
+                    selectedPlayers.splice(index, 1);
+                    element.classList.remove('selected');
+                } else {
+                    selectedPlayers.push(playerName);
+                    element.classList.add('selected');
+                }
+            }
+            
+            function editPlayer(playerName) {
+                if (gameDetails.finalized) {
+                    showFeedback('Game is locked. Cannot edit players.', 'error');
+                    return;
+                }
+                const player = playersData[playerName];
+                if (player) {
+                    addPlayerNameInput.value = playerName;
+                    addPlayerNumberInput.value = player.Number || '';
+                    addPlayerPositionInput.value = player.Position || '';
+                    addPlayerButton.textContent = 'Update Player';
+                    editingPlayerName = playerName;
+                    renderUI(); // Re-render to highlight the editing player
+                }
+            }
+
+            async function addOrUpdatePlayer() {
+                const newPlayerName = addPlayerNameInput.value.trim();
+                const newPlayerNumber = addPlayerNumberInput.value.trim();
+                const newPlayerPosition = addPlayerPositionInput.value.trim();
+
+                if (!newPlayerName || !currentGameId || gameDetails.finalized) {
+                    showFeedback('Please enter a player name and make sure a game is loaded.', 'error');
+                    return;
+                }
+                
+                if (editingPlayerName && editingPlayerName !== newPlayerName) {
+                    // Renaming a player
+                    try {
+                        await runTransaction(db, async (transaction) => {
+                            const gameDoc = await transaction.get(gameDocRef);
+                            const currentPlayers = gameDoc.data().players;
+                            
+                            if (currentPlayers[newPlayerName]) {
+                                showFeedback('A player with that name already exists.', 'error');
+                                throw new Error('Player already exists');
+                            }
+                            
+                            const playerInfo = currentPlayers[editingPlayerName];
+                            playerInfo.Number = newPlayerNumber;
+                            playerInfo.Position = newPlayerPosition;
+
+                            const updates = {};
+                            updates[`players.${editingPlayerName}`] = deleteField();
+                            updates[`players.${newPlayerName}`] = playerInfo;
+                            transaction.update(gameDocRef, updates);
+                        });
+                        showFeedback(`Player updated to ${newPlayerName}!`);
+                    } catch(e) {
+                        console.error("Transaction failed:", e);
+                        if (e.message !== 'Player already exists') {
+                           showFeedback('Failed to update player.', 'error');
+                        }
+                    }
+                } else if (editingPlayerName) {
+                    // Updating an existing player without changing the name
+                    await updateDoc(gameDocRef, {
+                        [`players.${editingPlayerName}.Number`]: newPlayerNumber,
+                        [`players.${editingPlayerName}.Position`]: newPlayerPosition,
+                    });
+                    showFeedback('Player details updated!');
+                } else {
+                    // Adding a new player
+                    if (playersData[newPlayerName]) {
+                        showFeedback('Player already exists in this game.', 'error');
+                        return;
+                    }
+                    await updateDoc(gameDocRef, {
+                        [`players.${newPlayerName}`]: {
+                            Name: newPlayerName, Number: newPlayerNumber, Position: newPlayerPosition,
+                            Goals: 0, Assists: 0, ShotsOnGoal: 0, MissedShots: 0, plus_minus: 0,
+                            Penalties: 0, Takeaways: 0, Saves: 0, Blocks: 0, FaceoffWins: 0, FaceoffLosses: 0
+                        }
+                    });
+                    showFeedback(`${newPlayerName} added to the roster!`);
+                }
+                
+                // Reset form and state
+                addPlayerNameInput.value = '';
+                addPlayerNumberInput.value = '';
+                addPlayerPositionInput.value = '';
+                addPlayerButton.textContent = 'Add Player';
+                editingPlayerName = null;
+                renderUI();
+            }
+
+            async function generateAiSummary() {
+                if (!currentGameId) {
+                    showFeedback('Please load a game before generating a summary.', 'error');
+                    return;
+                }
+
+                summaryOutput.innerHTML = '<p class="text-gray-500">Generating summary, please wait...</p>';
+                generateSummaryButton.disabled = true;
+
+                try {
+                    // 1. Prepare the data and prompt
+                    let statsText = "";
+                    for (const playerName in playersData) {
+                        const stats = playersData[playerName];
+                        const playerStats = [
+                            `Goals: ${stats.Goals || 0}`,
+                            `Assists: ${stats.Assists || 0}`,
+                            `SOG: ${stats.ShotsOnGoal || 0}`,
+                            `+/-: ${stats.plus_minus || 0}`,
+                            `Saves: ${stats.Saves || 0}`,
+                        ].join(', ');
+                        statsText += `- ${playerName}: ${playerStats}\n`;
+                    }
+
+                    const prompt = `
+        You are a professional sports reporter covering a youth hockey game for the "Eagles U9 2025" team.
+        Your task is to write a brief, exciting game summary suitable for a local sports blog or newsletter for parents.
+
+        Game Details:
+        - Opponent: ${gameDetails.opponent || 'Unknown'}
+        - Date: ${gameDetails.date || 'Unknown'}
+
+        Player Statistics:
+        ${statsText}
+
+        Based on these stats, please provide a summary that does the following:
+        1.  Write an engaging headline for the game.
+        2.  Briefly describe the flow of the game and the team's overall performance.
+        3.  Highlight one or two players who had a standout game based on their stats (e.g., top goal scorer, goalie with many saves, high plus-minus), using dynamic, reportorial language.
+        4.  Keep the tone exciting and professional, like a real sports report, while remaining positive and appropriate for a youth team. Avoid coach-like instructions for future practices.
+        `;
+
+                    // 2. Call the Gemini API
+                    const apiKey = ""; // Will be provided by the environment
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }] }],
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const summaryText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (summaryText) {
+                        summaryOutput.textContent = summaryText;
+                    } else {
+                        throw new Error('No summary was generated.');
+                    }
+
+                } catch (error) {
+                    console.error("Error generating AI summary:", error);
+                    summaryOutput.innerHTML = '<p class="text-red-400">Sorry, there was an error generating the summary. Please try again.</p>';
+                } finally {
+                    generateSummaryButton.disabled = false;
+                }
+            }
+
+
+            // Event Listeners
+            tabs.gameManagement.addEventListener('click', () => {
+                switchTab('gameManagement');
+                loadGameList();
+            });
+            tabs.setup.addEventListener('click', () => {
+                if (!currentGameId) {
+                    showFeedback('Please create or load a game first.', 'error');
+                    return;
+                }
+                switchTab('setup');
+            });
+            tabs.inGame.addEventListener('click', () => {
+                if (!currentGameId) {
+                    showFeedback('Please create or load a game first.', 'error');
+                    return;
+                }
+                switchTab('inGame');
+            });
+            tabs.allTimeStats.addEventListener('click', () => switchTab('allTimeStats'));
+            tabs.aiSummary.addEventListener('click', () => {
+                if (!currentGameId) {
+                    showFeedback('Please create or load a game first.', 'error');
+                    return;
+                }
+                switchTab('aiSummary');
+            });
+
+
+            if (createGameButton) createGameButton.addEventListener('click', createNewGame);
+            if (loadGameButton) loadGameButton.addEventListener('click', () => {
+                const gameId = loadGameIdSelect.value.trim();
+                if (gameId) {
+                    loadGame(gameId);
+                    switchTab('inGame');
+                } else {
+                    showFeedback('Please select a Game ID.', 'error');
+                }
+            });
+
+            if (addPlayerButton) addPlayerButton.addEventListener('click', addOrUpdatePlayer);
+            
+            playerListSetup.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-player-btn');
+                const editBtnContainer = e.target.closest('.edit-player-button');
+
+                if (deleteBtn) {
+                    e.stopPropagation(); // Prevent the edit button listener from firing too
+                    const playerName = deleteBtn.dataset.playerName;
+                    showConfirmation(`Are you sure you want to delete ${playerName}?`, (confirmed) => {
+                        if (confirmed) {
+                            deletePlayer(playerName);
+                        }
+                    });
+                } else if (editBtnContainer) {
+                    const playerName = editBtnContainer.dataset.playerName;
+                    editPlayer(playerName);
+                }
+            });
+
+            statButtonsContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.stat-btn');
+                if (button && button.dataset.statType) {
+                    const statType = button.dataset.statType;
+                    updateStatsForSelectedPlayers(statType);
+                }
+            });
+
+            if (undoButton) undoButton.addEventListener('click', undoLastAction);
+            if (finalizeGameButton) finalizeGameButton.addEventListener('click', () => {
+                 showConfirmation(`Are you sure you want to finalize this game? This cannot be undone.`, (confirmed) => {
+                    if (confirmed) {
+                        finalizeGame();
+                    }
+                });
+            });
+
+            if (startGameButton) {
+                startGameButton.addEventListener('click', () => {
+                    if (!currentGameId) {
+                        showFeedback('Please create or load a game first.', 'error');
+                        return;
+                    }
+                    switchTab('inGame');
+                });
+            }
+
+            if (generateSummaryButton) {
+                generateSummaryButton.addEventListener('click', generateAiSummary);
+            }
+
+            confirmYes.addEventListener('click', () => {
+                if (confirmCallback) {
+                    confirmCallback(true);
+                }
+                confirmationModal.classList.add('hidden');
+                confirmCallback = null;
+            });
+
+            confirmNo.addEventListener('click', () => {
+                if (confirmCallback) {
+                    confirmCallback(false);
+                }
+                confirmationModal.classList.add('hidden');
+                confirmCallback = null;
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
