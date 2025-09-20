@@ -133,6 +133,17 @@
         .stat-btn:hover {
             background-color: #CBD5E0;
         }
+        .print-btn {
+            background-color: #E2E8F0;
+            color: #1E293B;
+            font-weight: 700;
+            transition: background-color 0.2s, transform 0.1s;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .print-btn:hover {
+            background-color: #CBD5E0;
+        }
         .feedback-message {
             position: fixed;
             top: 50%;
@@ -210,6 +221,16 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
+        .undo-btn {
+            background-color: #DC2626;
+            color: white;
+            transition: background-color 0.2s;
+            border-radius: 0.75rem;
+            font-weight: bold;
+        }
+        .undo-btn:hover {
+            background-color: #B91C1C;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -218,6 +239,46 @@
             .box-score-table {
                 display: block;
                 white-space: nowrap;
+            }
+        }
+        @media print {
+            body, .container {
+                background: white !important;
+                color: black !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #printableArea, #printableArea * {
+                visibility: visible;
+            }
+            #printableArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .container {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                gap: 0 !important;
+            }
+            #printableArea .box-score-table th, #printableArea .box-score-table td {
+                border: 1px solid #ccc;
+                color: black;
+            }
+             #printableArea .box-score-table th {
+                background-color: #eee !important;
+             }
+            .mobile-scroll-container {
+                overflow-x: visible !important;
+            }
+            .hidden-print {
+                display: none !important;
+            }
+            .visible-print {
+                display: block !important;
             }
         }
     </style>
@@ -233,6 +294,17 @@
             <div class="flex justify-center space-x-4">
                 <button id="confirmYes" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Yes</button>
                 <button id="confirmNo" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="bg-[#1E293B] p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <p id="pinMessage" class="mb-4 text-lg">Enter PIN to Delete</p>
+            <input type="text" inputmode="numeric" id="pinInput" class="input-field w-full mb-4 text-center text-2xl tracking-[.5em]" maxlength="4" pattern="\d*">
+            <div class="flex justify-center space-x-4">
+                <button id="pinConfirm" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg text-lg">Confirm</button>
+                <button id="pinCancel" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg">Cancel</button>
             </div>
         </div>
     </div>
@@ -274,10 +346,11 @@
                 </div>
                 <div>
                     <h3 class="font-bold mb-2">Load Existing Game</h3>
-                    <p class="text-sm text-gray-400 mb-2">Select a saved game to load it.</p>
+                    <p class="text-sm text-gray-400 mb-2">Select a saved game to load or delete it.</p>
                     <div class="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
-                        <select id="loadGameIdSelect" class="input-field w-full md:w-2/3"></select>
-                        <button id="loadGameButton" class="stat-btn w-full md:w-1/3">Load Game</button>
+                        <select id="loadGameIdSelect" class="input-field w-full md:w-1/2"></select>
+                        <button id="loadGameButton" class="stat-btn w-full md:w-1/4">Load</button>
+                        <button id="deleteGameButton" class="undo-btn w-full md:w-1/4">Delete</button>
                     </div>
                 </div>
             </div>
@@ -314,6 +387,25 @@
         </div>
 
         <div id="inGameSection" class="hidden">
+            <div class="grid grid-cols-2 gap-4 mb-8 text-center text-white border-b-2 border-gray-600 pb-6">
+                <div>
+                    <h3 id="eaglesScoreLabel" class="text-2xl font-bold text-[#FFD700]">EAGLES</h3>
+                    <p id="eaglesScoreDisplay" class="text-6xl font-bold my-2">0</p>
+                    <div class="space-x-2 hidden-print">
+                        <button data-team="eagles" data-inc="1" class="score-btn stat-btn w-12 h-12 text-2xl rounded-full">+</button>
+                        <button data-team="eagles" data-inc="-1" class="score-btn stat-btn w-12 h-12 text-2xl rounded-full">-</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 id="opponentScoreLabel" class="text-2xl font-bold text-gray-300">OPPONENT</h3>
+                    <p id="opponentScoreDisplay" class="text-6xl font-bold my-2">0</p>
+                    <div class="space-x-2 hidden-print">
+                        <button data-team="opponent" data-inc="1" class="score-btn stat-btn w-12 h-12 text-2xl rounded-full">+</button>
+                        <button data-team="opponent" data-inc="-1" class="score-btn stat-btn w-12 h-12 text-2xl rounded-full">-</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="roster-and-stats mb-8">
                 <h2 class="text-xl font-semibold mb-2">Player Roster (Tap to Select)</h2>
                 <div id="playersListInGame" class="min-h-[10rem] bg-[#1E293B] p-4 rounded-lg overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -338,32 +430,41 @@
                     <button id="undoButton" class="undo-btn px-6 py-2 rounded-lg">Undo Last Stat</button>
                 </div>
             </div>
-            <div class="box-score">
-                <h2 class="text-xl font-semibold mb-2">Box Score</h2>
-                <div class="mobile-scroll-container rounded-lg">
-                    <table class="box-score-table">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-2">Player</th>
-                                <th class="px-4 py-2 text-center">Num</th>
-                                <th class="px-4 py-2 text-center">Pos</th>
-                                <th class="px-4 py-2 text-center">G</th>
-                                <th class="px-4 py-2 text-center">A</th>
-                                <th class="px-4 py-2 text-center">SOG</th>
-                                <th class="px-4 py-2 text-center">MS</th>
-                                <th class="px-4 py-2 text-center">+/-</th>
-                                <th class="px-4 py-2 text-center">PIM</th>
-                                <th class="px-4 py-2 text-center">TKA</th>
-                                <th class="px-4 py-2 text-center">Saves</th>
-                                <th class="px-4 py-2 text-center">Blocks</th>
-                                <th class="px-4 py-2 text-center">FOW</th>
-                                <th class="px-4 py-2 text-center">FOL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="boxScoreBody">
-                            <tr><td colspan="14" class="text-center text-gray-400">No stats yet.</td></tr>
-                        </tbody>
-                    </table>
+            <div id="printableArea">
+                <div class="visible-print hidden">
+                    <h2 id="printTitle" class="text-xl font-bold text-center mb-2"></h2>
+                    <div id="printableScoreboard" class="text-center mb-4 text-lg"></div>
+                </div>
+                <div class="box-score">
+                     <div class="flex justify-between items-center mb-2 hidden-print">
+                        <h2 class="text-xl font-semibold">Box Score</h2>
+                        <button id="printBoxScoreButton" class="print-btn px-4 py-2">Print to PDF</button>
+                    </div>
+                    <div class="mobile-scroll-container rounded-lg">
+                        <table class="box-score-table">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Player</th>
+                                    <th class="px-4 py-2 text-center">Num</th>
+                                    <th class="px-4 py-2 text-center">Pos</th>
+                                    <th class="px-4 py-2 text-center">G</th>
+                                    <th class="px-4 py-2 text-center">A</th>
+                                    <th class="px-4 py-2 text-center">SOG</th>
+                                    <th class="px-4 py-2 text-center">MS</th>
+                                    <th class="px-4 py-2 text-center">+/-</th>
+                                    <th class="px-4 py-2 text-center">PIM</th>
+                                    <th class="px-4 py-2 text-center">TKA</th>
+                                    <th class="px-4 py-2 text-center">Saves</th>
+                                    <th class="px-4 py-2 text-center">Blocks</th>
+                                    <th class="px-4 py-2 text-center">FOW</th>
+                                    <th class="px-4 py-2 text-center">FOL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boxScoreBody">
+                                <tr><td colspan="14" class="text-center text-gray-400">No stats yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="mt-6 flex justify-center">
@@ -439,7 +540,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, runTransaction, collection, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, runTransaction, collection, getDocs, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -495,6 +596,7 @@
             const undoButton = document.getElementById('undoButton');
             const createGameButton = document.getElementById('createGameButton');
             const loadGameButton = document.getElementById('loadGameButton');
+            const deleteGameButton = document.getElementById('deleteGameButton');
             const loadGameIdSelect = document.getElementById('loadGameIdSelect');
             const currentGameInfo = document.getElementById('currentGameInfo');
             const allTimeTotalsBody = document.getElementById('allTimeTotalsBody');
@@ -505,11 +607,21 @@
             const confirmationMessage = document.getElementById('confirmationMessage');
             const confirmYes = document.getElementById('confirmYes');
             const confirmNo = document.getElementById('confirmNo');
+            const pinModal = document.getElementById('pinModal');
+            const pinConfirm = document.getElementById('pinConfirm');
+            const pinCancel = document.getElementById('pinCancel');
+            const pinInput = document.getElementById('pinInput');
             const startGameButton = document.getElementById('startGameButton');
             const generateSummaryButton = document.getElementById('generateSummaryButton');
             const aiSummaryOutput = document.getElementById('aiSummaryOutput');
             const errorModal = document.getElementById('errorModal');
             const errorMessage = document.getElementById('errorMessage');
+            const eaglesScoreDisplay = document.getElementById('eaglesScoreDisplay');
+            const opponentScoreDisplay = document.getElementById('opponentScoreDisplay');
+            const opponentScoreLabel = document.getElementById('opponentScoreLabel');
+            const printBoxScoreButton = document.getElementById('printBoxScoreButton');
+            const printTitle = document.getElementById('printTitle');
+            const printableScoreboard = document.getElementById('printableScoreboard');
             
             let playersData = {};
             let gameDetails = {};
@@ -561,6 +673,26 @@
                 };
             }
             
+            function showPinModal(onConfirm) {
+                pinInput.value = '';
+                pinModal.classList.remove('hidden');
+                setTimeout(() => pinInput.focus(), 100);
+                
+                pinConfirm.onclick = () => {
+                    if (pinInput.value === '2016') {
+                        pinModal.classList.add('hidden');
+                        onConfirm();
+                    } else {
+                        showFeedback('Incorrect PIN.', 'error');
+                        pinInput.value = '';
+                    }
+                };
+
+                pinCancel.onclick = () => {
+                    pinModal.classList.add('hidden');
+                };
+            }
+
             // UI Functions
             function switchTab(tab) {
                 selectedPlayers = [];
@@ -667,10 +799,10 @@
                 // Toggle locked state UI
                 if (gameDetails.finalized) {
                     lockedMessage.classList.remove('hidden');
-                    document.querySelectorAll('#inGameSection .stat-btn, #undoButton, #finalizeGameButton').forEach(el => el.disabled = true);
+                    document.querySelectorAll('#inGameSection .stat-btn, #undoButton, #finalizeGameButton, #inGameSection .score-btn').forEach(el => el.disabled = true);
                 } else {
                     lockedMessage.classList.add('hidden');
-                     document.querySelectorAll('#inGameSection .stat-btn, #undoButton, #finalizeGameButton').forEach(el => el.disabled = false);
+                     document.querySelectorAll('#inGameSection .stat-btn, #undoButton, #finalizeGameButton, #inGameSection .score-btn').forEach(el => el.disabled = false);
                 }
             }
 
@@ -682,6 +814,11 @@
                 if (currentGameInfo) {
                     currentGameInfo.textContent = currentGameId ? `Current Game: ${gameDetails.opponent} on ${gameDetails.date}` : 'No game loaded. Create or load a game to begin.';
                 }
+
+                // Update scoreboard
+                eaglesScoreDisplay.textContent = gameDetails.eaglesScore || 0;
+                opponentScoreDisplay.textContent = gameDetails.opponentScore || 0;
+                opponentScoreLabel.textContent = gameDetails.opponent ? gameDetails.opponent.toUpperCase() : 'OPPONENT';
             }
 
             function renderAllTimeStats(allTimeData) {
@@ -756,7 +893,7 @@
                         updateGameInfoUI();
                     } else {
                         playersData = {};
-                        gameDetails = { opponent: '', date: '', time: '', location: '' };
+                        gameDetails = { opponent: '', date: '', time: '', location: '', eaglesScore: 0, opponentScore: 0 };
                         history = [];
                         setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, history: history });
                     }
@@ -855,7 +992,15 @@
                 const initialRoster = await getDefaultRoster();
 
                 await setDoc(newGameRef, {
-                    gameDetails: { opponent: opponent, date: date, time: time, location: '', finalized: false },
+                    gameDetails: { 
+                        opponent: opponent, 
+                        date: date, 
+                        time: time, 
+                        location: '', 
+                        finalized: false,
+                        eaglesScore: 0,
+                        opponentScore: 0
+                    },
                     players: initialRoster,
                     history: []
                 });
@@ -877,13 +1022,30 @@
             if (timeInput) timeInput.addEventListener('input', (e) => updateGameDetails('time', e.target.value));
             if (locationInput) locationInput.addEventListener('input', (e) => updateGameDetails('location', e.target.value));
 
+            async function updateScore(team, increment) {
+                if (!userId || !gameDocRef || gameDetails.finalized) return;
+                
+                const field = team === 'eagles' ? 'eaglesScore' : 'opponentScore';
+                let currentScore = gameDetails[field] || 0;
+                let newScore = currentScore + increment;
+                if (newScore < 0) newScore = 0;
+
+                await updateDoc(gameDocRef, {
+                    [`gameDetails.${field}`]: newScore
+                });
+            }
+
             async function updateStatsForSelectedPlayers(statType) {
                 if (gameDetails.finalized) {
                     showFeedback('This game is locked and cannot be edited.', 'error');
                     return;
                 }
-                if (selectedPlayers.length === 0) {
-                    showFeedback('No players selected.', 'error');
+                 if (selectedPlayers.length === 0) {
+                    if (statType === 'Goals') {
+                        showFeedback('Select the player who scored before adding a goal.', 'error');
+                    } else {
+                        showFeedback('No players selected.', 'error');
+                    }
                     return;
                 }
                 if (!gameDocRef) {
@@ -947,7 +1109,6 @@
                     return;
                 }
 
-                // Group history by timestamp to undo a single user action (which might affect multiple players, e.g., +/-)
                 const lastActionTimestamp = history[history.length - 1].timestamp;
                 const actionsToUndo = history.filter(action => action.timestamp === lastActionTimestamp);
                 const remainingHistory = history.filter(action => action.timestamp !== lastActionTimestamp);
@@ -1023,6 +1184,89 @@
                             showFeedback('Failed to finalize game.', 'error');
                         }
                     }
+                });
+            }
+
+            async function deleteSelectedGame() {
+                const gameIdToDelete = loadGameIdSelect.value.trim();
+                if (!gameIdToDelete) {
+                    showFeedback('Please select a game to delete.', 'error');
+                    return;
+                }
+                
+                const selectedOption = loadGameIdSelect.options[loadGameIdSelect.selectedIndex];
+                const confirmMsg = `Are you sure you want to permanently delete the game: "${selectedOption.text.replace(' [LOCKED]','')}"? This cannot be undone.`;
+
+                showPinModal(async () => {
+                    showConfirmation(confirmMsg, async () => {
+                        loadingSpinner.classList.remove('hidden');
+                        try {
+                            const gameToDeleteDocRef = doc(db, `/artifacts/${teamId}/public/data/games/${gameIdToDelete}`);
+                            const gameToDeleteSnap = await getDoc(gameToDeleteDocRef);
+
+                            if (!gameToDeleteSnap.exists()) {
+                                throw new Error('Game not found.');
+                            }
+
+                            const gameToDeleteData = gameToDeleteSnap.data();
+
+                            if (gameToDeleteData.gameDetails.finalized) {
+                                await runTransaction(db, async (transaction) => {
+                                    const allTimeDocRef = doc(db, `/artifacts/${teamId}/public/data/playerTotals/data`);
+                                    const allTimeDoc = await transaction.get(allTimeDocRef);
+
+                                    if (!allTimeDoc.exists()) {
+                                        transaction.delete(gameToDeleteDocRef);
+                                        return;
+                                    }
+
+                                    const allTimeData = allTimeDoc.data();
+                                    const playersInDeletedGame = gameToDeleteData.players;
+
+                                    for (const playerName in playersInDeletedGame) {
+                                        if (allTimeData.players && allTimeData.players[playerName]) {
+                                            allTimeData.players[playerName].gamesPlayed -= 1;
+                                            statFields.forEach(stat => {
+                                                allTimeData.players[playerName][stat] = (allTimeData.players[playerName][stat] || 0) - (playersInDeletedGame[playerName][stat] || 0);
+                                            });
+                                            if (allTimeData.players[playerName].gamesPlayed <= 0) {
+                                                delete allTimeData.players[playerName];
+                                            }
+                                        }
+                                    }
+
+                                    if (allTimeData.games && allTimeData.games[gameIdToDelete]) {
+                                        delete allTimeData.games[gameIdToDelete];
+                                    }
+
+                                    transaction.set(allTimeDocRef, allTimeData);
+                                    transaction.delete(gameToDeleteDocRef);
+                                });
+                            } else {
+                                await deleteDoc(gameToDeleteDocRef);
+                            }
+
+                            showFeedback('Game successfully deleted!');
+                            
+                            if (currentGameId === gameIdToDelete) {
+                                currentGameId = null;
+                                gameDocRef = null;
+                                playersData = {};
+                                gameDetails = {};
+                                history = [];
+                                updateGameInfoUI();
+                                switchTab('gameManagement');
+                            }
+                            
+                            loadGameList();
+
+                        } catch (error) {
+                            console.error("Error deleting game: ", error);
+                            showFeedback(error.message || 'Failed to delete game.', 'error');
+                        } finally {
+                            loadingSpinner.classList.add('hidden');
+                        }
+                    });
                 });
             }
 
@@ -1197,6 +1441,29 @@
                 }
             }
 
+            function printBoxScore() {
+                if (!currentGameId) {
+                    showFeedback('Load a game to print its box score.', 'error');
+                    return;
+                }
+                
+                let titleText = `Box Score: Eagles vs ${gameDetails.opponent} - ${gameDetails.date}`;
+                if (gameDetails.location) {
+                    titleText += ` at ${gameDetails.location}`;
+                }
+                printTitle.textContent = titleText;
+                
+                printableScoreboard.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 20px; font-size: 24px; font-weight: bold;">
+                        <span>Eagles: ${gameDetails.eaglesScore || 0}</span>
+                        <span style="margin: 0 20px;">-</span>
+                        <span>${gameDetails.opponent || 'Opponent'}: ${gameDetails.opponentScore || 0}</span>
+                    </div>
+                `;
+
+                window.print();
+            }
+
 
             // Event Listeners
             function setupInitialEventListeners() {
@@ -1230,6 +1497,7 @@
                         showFeedback('Please select a Game ID.', 'error');
                     }
                 });
+                if(deleteGameButton) deleteGameButton.addEventListener('click', deleteSelectedGame);
 
                 if (addPlayerButton) addPlayerButton.addEventListener('click', addOrUpdatePlayer);
                 
@@ -1254,12 +1522,21 @@
                         updateStatsForSelectedPlayers(statType);
                     }
                 });
+                
+                document.getElementById('inGameSection').addEventListener('click', (e) => {
+                    if (e.target.matches('.score-btn')) {
+                        const team = e.target.dataset.team;
+                        const increment = parseInt(e.target.dataset.inc);
+                        updateScore(team, increment);
+                    }
+                });
 
 
                 if (undoButton) undoButton.addEventListener('click', undoLastAction);
                 if (finalizeGameButton) finalizeGameButton.addEventListener('click', finalizeGame);
                 if (startGameButton) startGameButton.addEventListener('click', () => switchTab('inGame'));
                 if (generateSummaryButton) generateSummaryButton.addEventListener('click', generateAiSummary);
+                if (printBoxScoreButton) printBoxScoreButton.addEventListener('click', printBoxScore);
                 
                 function setInitialDateTime() {
                     const now = new Date();
