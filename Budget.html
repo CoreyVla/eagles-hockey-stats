@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>budget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter Slate background */
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            min-width: 1800px;
+        }
+        /* Styling for the input fields within cells */
+        td .input-cell {
+            width: 100%;
+            padding: 8px 4px;
+            border: 1px solid transparent;
+            background-color: transparent;
+            text-align: center; /* Centered text */
+            border-radius: 4px;
+            transition: all 0.2s ease-in-out;
+        }
+        td .input-cell:hover {
+            background-color: #f1f5f9; /* Subtle hover effect */
+        }
+        td .input-cell:focus {
+            outline: 2px solid #38bdf8;
+            background-color: white;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+        .editable-cell {
+            position: relative;
+        }
+        .edit-icon {
+            position: absolute;
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        .editable-cell:hover .edit-icon {
+            opacity: 1;
+        }
+        .calculated-col {
+            font-weight: 600;
+            background-color: #f1f5f9;
+            text-align: center;
+        }
+        .delta-col {
+            font-weight: 600;
+            background-color: #fefce8;
+            text-align: center;
+        }
+        .positive { color: #16a34a; }
+        .negative { color: #dc2626; }
+        .month-label-cell {
+            position: -webkit-sticky;
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #fff;
+            text-align: center;
+            font-weight: 500;
+        }
+        .header-sticky {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+        .header-month-sticky {
+            left: 0;
+            z-index: 40;
+        }
+        #context-menu {
+            min-width: 160px;
+        }
+        thead th {
+            text-align: center;
+        }
+        /* More professional header colors */
+        .income-header { background-color: #f0fdf4; color: #15803d; }
+        .expense-header { background-color: #fef2f2; color: #b91c1c; }
+        th[contenteditable="true"] {
+            cursor: text;
+            background-color: #e0f2fe;
+        }
+        th[contenteditable="true"]:focus {
+            outline: 2px solid #38bdf8;
+        }
+        /* Comment indicator style */
+        .has-comment::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 8px 8px 0;
+            border-color: transparent #fbbf24 transparent transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Budget</h1>
+            <p class="text-slate-500 mt-2">Save different plans and compare them against your "Baseline".</p>
+        </header>
+
+        <!-- Summary and Scenarios Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Balances -->
+            <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold mb-4 text-slate-800">Starting Balances</h2>
+                <div id="balances" class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                    <label class="font-medium text-slate-600 self-center">Bank Account:</label>
+                    <input type="text" class="p-2 rounded bg-slate-100 text-right border border-slate-200" value="10000">
+                    <label class="font-medium text-slate-600 self-center">Cash on Hand:</label>
+                    <input type="text" class="p-2 rounded bg-slate-100 text-right border border-slate-200" value="500">
+                    <label class="font-medium text-slate-600 self-center">Corey CC Balance:</label>
+                    <input type="text" class="p-2 rounded bg-slate-100 text-right border border-slate-200 negative" value="-2500">
+                    <label class="font-medium text-slate-600 self-center">Chelsea CC Balance:</label>
+                    <input type="text" class="p-2 rounded bg-slate-100 text-right border border-slate-200 negative" value="-1500">
+                </div>
+            </div>
+             <!-- Scenario Management -->
+            <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-lg font-semibold text-slate-800">Scenario Management</h2>
+                <div>
+                    <label for="scenario-select" class="block text-sm font-medium text-slate-600 mb-1">Load Saved Scenario:</label>
+                    <select id="scenario-select" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                </div>
+                <div class="flex items-end gap-2">
+                    <div class="flex-grow">
+                        <label for="scenario-name-input" class="block text-sm font-medium text-slate-600 mb-1">Scenario Name:</label>
+                        <input type="text" id="scenario-name-input" class="w-full p-2 border border-slate-300 rounded-md shadow-sm" placeholder="e.g., Baseline">
+                    </div>
+                    <button id="save-scenario-button" class="p-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors">Save</button>
+                    <button id="delete-scenario-button" class="p-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container bg-white rounded-lg shadow-sm border border-slate-200">
+            <table id="budget-table" class="text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-100 header-sticky">
+                    <tr>
+                        <th id="header-month" scope="col" class="px-6 py-3 font-semibold header-sticky header-month-sticky bg-slate-100">Month</th>
+                        <th scope="col" class="px-6 py-3 income-header" contenteditable="true">Income 1</th><th scope="col" class="px-6 py-3 income-header" contenteditable="true">Income 2</th><th scope="col" class="px-6 py-3 income-header" contenteditable="true">Income 3</th><th scope="col" class="px-6 py-3 income-header" contenteditable="true">Income 4</th><th scope="col" class="px-6 py-3 income-header" contenteditable="true">Tax Return</th>
+                        <th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Home/Util 1</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Home/Util 2</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Cars</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Insurance</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Student Loans</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Food</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Gifts</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Sports</th><th scope="col" class="px-6 py-3 expense-header" contenteditable="true">Misc</th>
+                        <th scope="col" class="px-6 py-3 calculated-col">Net Month</th><th scope="col" class="px-6 py-3 calculated-col">Cumulative</th><th scope="col" class="px-6 py-3 delta-col">Delta from Baseline</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Value</h3>
+            <div class="mt-2">
+                <input type="text" id="modal-input" class="w-full p-2 border border-gray-300 rounded-md">
+            </div>
+            <div class="items-center px-4 py-3 mt-4 text-right">
+                <button id="modal-cancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 mr-2">Cancel</button>
+                <button id="modal-save" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment Modal -->
+    <div id="comment-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="comment-modal-title">Add/Edit Comment</h3>
+            <div class="mt-2">
+                <textarea id="comment-modal-textarea" class="w-full p-2 border border-gray-300 rounded-md h-24" placeholder="Enter your notes here..."></textarea>
+            </div>
+            <div class="items-center px-4 py-3 mt-4 text-right">
+                <button id="comment-modal-cancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 mr-2">Cancel</button>
+                <button id="comment-modal-save" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="hidden absolute z-50 bg-white border border-slate-200 rounded-md shadow-lg py-1">
+        <a href="#" id="fill-down-action" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Fill Down</a>
+        <a href="#" id="apply-yearly-action" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Apply to Future Years</a>
+        <a href="#" id="add-comment-action" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Add/Edit Comment</a>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const budgetTableBody = document.querySelector('#budget-table tbody');
+        const scenarioSelect = document.getElementById('scenario-select');
+        const balancesContainer = document.getElementById('balances');
+        const modal = document.getElementById('edit-modal');
+        const modalInput = document.getElementById('modal-input');
+        const modalTitle = document.getElementById('modal-title');
+        const saveScenarioButton = document.getElementById('save-scenario-button');
+        const deleteScenarioButton = document.getElementById('delete-scenario-button');
+        const scenarioNameInput = document.getElementById('scenario-name-input');
+        const contextMenu = document.getElementById('context-menu');
+        const fillDownAction = document.getElementById('fill-down-action');
+        const applyYearlyAction = document.getElementById('apply-yearly-action');
+        const addCommentAction = document.getElementById('add-comment-action');
+        const commentModal = document.getElementById('comment-modal');
+        const commentModalTextarea = document.getElementById('comment-modal-textarea');
+        const commentModalTitle = document.getElementById('comment-modal-title');
+        
+        let currentEditingInput = null;
+        let contextMenuTarget = null;
+        let currentScenario = {};
+
+        const columnTypes = ['income', 'income', 'income', 'income', 'income', 'expense', 'expense', 'expense', 'expense', 'expense', 'expense', 'expense', 'expense', 'expense'];
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        const formatCurrency = (value, showSign = false) => {
+            const options = { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 };
+            if (showSign) options.signDisplay = 'always';
+            return new Intl.NumberFormat('en-US', options).format(value);
+        };
+
+        const getSavedScenarios = () => JSON.parse(localStorage.getItem('budgetScenarios')) || {};
+
+        const generateTableRows = (data) => {
+            budgetTableBody.innerHTML = '';
+            data.forEach((monthData, rowIndex) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white';
+                row.dataset.rowIndex = rowIndex;
+                row.innerHTML = `<td class="px-6 py-4 font-bold text-slate-900 whitespace-nowrap month-label-cell">${monthData.month}</td>`;
+                monthData.values.forEach((cellData, colIndex) => {
+                    const cell = document.createElement('td');
+                    cell.className = 'px-2 py-1 editable-cell';
+                    if (cellData.comment) {
+                        cell.classList.add('has-comment');
+                    }
+                    cell.innerHTML = `<input type="text" class="input-cell" value="${cellData.value}" title="${cellData.comment || ''}" data-row-index="${rowIndex}" data-col-index="${colIndex}"><svg class="edit-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg>`;
+                    row.appendChild(cell);
+                });
+                row.innerHTML += `<td class="px-6 py-4 calculated-col net-month"></td><td class="px-6 py-4 calculated-col cumulative"></td><td class="px-6 py-4 delta-col delta"></td>`;
+                budgetTableBody.appendChild(row);
+            });
+        };
+
+        const loadScenario = (scenarioName) => {
+            const scenarios = getSavedScenarios();
+            const scenario = scenarios[scenarioName];
+            if (!scenario) return;
+
+            currentScenario = JSON.parse(JSON.stringify(scenario)); // Deep copy
+
+            balancesContainer.querySelectorAll('input').forEach((input, i) => { input.value = currentScenario.balances[i]; });
+            generateTableRows(currentScenario.tableData);
+            scenarioNameInput.value = scenarioName;
+            
+            if(currentScenario.headers) {
+                document.querySelectorAll('thead th[contenteditable="true"]').forEach((th, i) => {
+                    th.textContent = currentScenario.headers[i] || th.textContent;
+                });
+            }
+
+            updateCalculations();
+        };
+
+        const populateScenariosDropdown = () => {
+            const scenarios = getSavedScenarios();
+            const names = Object.keys(scenarios);
+            const currentVal = scenarioSelect.value;
+            scenarioSelect.innerHTML = '<option value="">-- Select a Scenario --</option>';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                scenarioSelect.appendChild(option);
+            });
+            scenarioSelect.value = currentVal;
+        };
+        
+        const saveCurrentScenario = () => {
+            const name = scenarioNameInput.value.trim();
+            if (!name) { alert('Please enter a name for the scenario.'); return; }
+            
+            currentScenario.headers = Array.from(document.querySelectorAll('thead th[contenteditable="true"]')).map(th => th.textContent);
+            currentScenario.balances = Array.from(balancesContainer.querySelectorAll('input')).map(input => input.value);
+
+            const scenarios = getSavedScenarios();
+            scenarios[name] = currentScenario;
+            localStorage.setItem('budgetScenarios', JSON.stringify(scenarios));
+            
+            populateScenariosDropdown();
+            scenarioSelect.value = name;
+            deleteScenarioButton.disabled = false;
+            
+            const originalText = 'Save';
+            saveScenarioButton.textContent = 'Saved!';
+            setTimeout(() => saveScenarioButton.textContent = originalText, 2000);
+        };
+
+        const deleteSelectedScenario = () => {
+            const name = scenarioSelect.value;
+            if (!name) return;
+            
+            if (!confirm(`Are you sure you want to delete the "${name}" scenario? This cannot be undone.`)) return;
+
+            const scenarios = getSavedScenarios();
+            delete scenarios[name];
+            localStorage.setItem('budgetScenarios', JSON.stringify(scenarios));
+            
+            scenarioNameInput.value = '';
+            populateScenariosDropdown();
+            deleteScenarioButton.disabled = true;
+            initializeNewPlan();
+        };
+        
+        const calculateCumulativePath = (scenario) => {
+            if (!scenario || !scenario.balances) return [];
+            const path = [];
+            let cumulative = scenario.balances.reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+            scenario.tableData.forEach(row => {
+                let netMonth = 0;
+                row.values.forEach((cellData, i) => {
+                    const numValue = parseFloat(cellData.value) || 0;
+                    if (columnTypes[i] === 'income') netMonth += numValue;
+                    else netMonth -= numValue;
+                });
+                cumulative += netMonth;
+                path.push(cumulative);
+            });
+            return path;
+        };
+
+        const updateCalculations = () => {
+            const scenarios = getSavedScenarios();
+            const baselinePath = calculateCumulativePath(scenarios['Baseline']);
+
+            let currentCumulative = currentScenario.balances.reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+
+            currentScenario.tableData.forEach((rowData, rowIndex) => {
+                let netMonth = 0;
+                rowData.values.forEach((cellData, i) => {
+                    const value = parseFloat(cellData.value) || 0;
+                    if (columnTypes[i] === 'income') netMonth += value;
+                    else netMonth -= value;
+                });
+
+                currentCumulative += netMonth;
+                const baselineValue = baselinePath.length > rowIndex ? baselinePath[rowIndex] : currentCumulative;
+                const delta = currentCumulative - baselineValue;
+                
+                const rowEl = budgetTableBody.querySelector(`tr[data-row-index="${rowIndex}"]`);
+                if(rowEl) {
+                    rowEl.querySelector('.net-month').textContent = formatCurrency(netMonth);
+                    rowEl.querySelector('.cumulative').textContent = formatCurrency(currentCumulative);
+                    const deltaCell = rowEl.querySelector('.delta');
+                    deltaCell.textContent = formatCurrency(scenarios['Baseline'] ? delta : 0, true);
+                    deltaCell.classList.toggle('positive', delta > 0);
+                    deltaCell.classList.toggle('negative', delta < 0);
+                }
+            });
+        };
+
+        const initializeNewPlan = () => {
+            const defaultValues = [5000, 1000, 0, 0, 0, 2500, 500, 400, 300, 800, 1000, 200, 200, 300].map(v => ({value: v, comment: ''}));
+            const tableData = [];
+            let currentDate = new Date(); 
+            currentDate.setDate(1);
+
+            while (currentDate.getFullYear() < 2031) {
+                tableData.push({ month: `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`, values: JSON.parse(JSON.stringify(defaultValues)) });
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+            
+            currentScenario = {
+                balances: ['10000', '500', '-2500', '-1500'],
+                tableData: tableData,
+                headers: Array.from(document.querySelectorAll('thead th[contenteditable="true"]')).map(th => th.textContent)
+            };
+            
+            generateTableRows(currentScenario.tableData);
+            updateCalculations();
+        };
+
+        const openModal = (inputElement) => {
+            currentEditingInput = inputElement;
+            modalInput.value = currentEditingInput.value;
+            modalTitle.textContent = `Edit Value for ${currentEditingInput.closest('tr').querySelector('td').textContent}`;
+            modal.classList.remove('hidden');
+            modalInput.focus();
+            modalInput.select();
+        };
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            currentEditingInput = null;
+        };
+        const saveModal = () => {
+            if (currentEditingInput) {
+                currentEditingInput.value = currentEditingInput.value;
+                // Update central state
+                const rowIndex = parseInt(currentEditingInput.dataset.rowIndex);
+                const colIndex = parseInt(currentEditingInput.dataset.colIndex);
+                currentScenario.tableData[rowIndex].values[colIndex].value = modalInput.value;
+                updateCalculations();
+            }
+            closeModal();
+        };
+
+        // --- EVENT LISTENERS ---
+        scenarioSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadScenario(e.target.value);
+                deleteScenarioButton.disabled = false;
+            } else {
+                scenarioNameInput.value = '';
+                deleteScenarioButton.disabled = true;
+                initializeNewPlan();
+            }
+        });
+        saveScenarioButton.addEventListener('click', saveCurrentScenario);
+        deleteScenarioButton.addEventListener('click', deleteSelectedScenario);
+        balancesContainer.addEventListener('input', (e) => {
+             const index = Array.from(balancesContainer.querySelectorAll('input')).indexOf(e.target);
+             currentScenario.balances[index] = e.target.value;
+             updateCalculations();
+        });
+        budgetTableBody.addEventListener('input', (e) => { 
+            if (e.target.classList.contains('input-cell')) {
+                const input = e.target;
+                const rowIndex = parseInt(input.dataset.rowIndex);
+                const colIndex = parseInt(input.dataset.colIndex);
+                currentScenario.tableData[rowIndex].values[colIndex].value = input.value;
+                updateCalculations();
+            }
+        });
+        budgetTableBody.addEventListener('click', (e) => {
+             const icon = e.target.closest('.edit-icon');
+             if (icon) {
+                 openModal(icon.previousElementSibling);
+                 return;
+             }
+        });
+        
+        // --- Context Menu & Actions ---
+        budgetTableBody.addEventListener('contextmenu', (e) => {
+            if (e.target.classList.contains('input-cell')) {
+                e.preventDefault();
+                contextMenuTarget = e.target;
+                contextMenu.style.top = `${e.pageY}px`;
+                contextMenu.style.left = `${e.pageX}px`;
+                contextMenu.classList.remove('hidden');
+            }
+        });
+
+        fillDownAction.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!contextMenuTarget) return;
+
+            const startRow = parseInt(contextMenuTarget.dataset.rowIndex);
+            const colIndex = parseInt(contextMenuTarget.dataset.colIndex);
+            const valueToFill = contextMenuTarget.value;
+            
+            for (let i = startRow + 1; i < currentScenario.tableData.length; i++) {
+                currentScenario.tableData[i].values[colIndex].value = valueToFill;
+            }
+            
+            generateTableRows(currentScenario.tableData);
+            updateCalculations();
+            contextMenu.classList.add('hidden');
+            contextMenuTarget = null;
+        });
+
+        applyYearlyAction.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!contextMenuTarget) return;
+
+            const startRow = parseInt(contextMenuTarget.dataset.rowIndex);
+            const colIndex = parseInt(contextMenuTarget.dataset.colIndex);
+            const valueToFill = contextMenuTarget.value;
+            const sourceMonth = currentScenario.tableData[startRow].month.split(' ')[0];
+
+            for (let i = startRow + 1; i < currentScenario.tableData.length; i++) {
+                const targetMonth = currentScenario.tableData[i].month.split(' ')[0];
+                if (targetMonth === sourceMonth) {
+                    currentScenario.tableData[i].values[colIndex].value = valueToFill;
+                }
+            }
+
+            generateTableRows(currentScenario.tableData);
+            updateCalculations();
+            contextMenu.classList.add('hidden');
+            contextMenuTarget = null;
+        });
+
+        addCommentAction.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!contextMenuTarget) return;
+
+            const rowIndex = parseInt(contextMenuTarget.dataset.rowIndex);
+            const colIndex = parseInt(contextMenuTarget.dataset.colIndex);
+
+            const currentComment = currentScenario.tableData[rowIndex].values[colIndex].comment || '';
+            
+            const month = currentScenario.tableData[rowIndex].month;
+            const header = document.querySelectorAll('thead th[contenteditable="true"]')[colIndex].textContent;
+            commentModalTitle.textContent = `Comment for ${header} in ${month}`;
+            commentModalTextarea.value = currentComment;
+            commentModal.classList.remove('hidden');
+            commentModalTextarea.focus();
+            
+            contextMenu.classList.add('hidden');
+        });
+
+        document.getElementById('comment-modal-save').addEventListener('click', () => {
+            if (!contextMenuTarget) return;
+
+            const rowIndex = parseInt(contextMenuTarget.dataset.rowIndex);
+            const colIndex = parseInt(contextMenuTarget.dataset.colIndex);
+            const newComment = commentModalTextarea.value.trim();
+
+            currentScenario.tableData[rowIndex].values[colIndex].comment = newComment;
+            const cellTd = contextMenuTarget.closest('td');
+
+            if (newComment) {
+                cellTd.classList.add('has-comment');
+                contextMenuTarget.title = newComment;
+            } else {
+                cellTd.classList.remove('has-comment');
+                contextMenuTarget.title = '';
+            }
+            
+            commentModal.classList.add('hidden');
+            contextMenuTarget = null;
+        });
+
+        document.getElementById('comment-modal-cancel').addEventListener('click', () => {
+            commentModal.classList.add('hidden');
+            contextMenuTarget = null;
+        });
+
+        commentModal.addEventListener('click', (e) => { 
+            if (e.target === commentModal) {
+                commentModal.classList.add('hidden');
+                contextMenuTarget = null;
+            } 
+        });
+
+
+        window.addEventListener('click', () => contextMenu.classList.add('hidden'));
+
+        document.getElementById('modal-save').addEventListener('click', saveModal);
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        // --- INITIALIZATION ---
+        populateScenariosDropdown();
+        initializeNewPlan();
+    });
+    </script>
+</body>
+</html>
+
