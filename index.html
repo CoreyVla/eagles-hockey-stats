@@ -6,7 +6,8 @@
     <title>Eagles U9 2025 Hockey Stat Keeper</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style id="appStyles">
         body {
             font-family: 'Inter', sans-serif;
             background-color: #1a2a45; /* Navy */
@@ -276,6 +277,15 @@
         .undo-btn:hover {
             background-color: #B91C1C;
         }
+        #pdf-render-area {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            background: white;
+            color: black;
+            padding: 2rem;
+            width: 1000px; /* Fixed width for better layout */
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -284,46 +294,6 @@
             .box-score-table {
                 display: block;
                 white-space: nowrap;
-            }
-        }
-        @media print {
-            body, .container {
-                background: white !important;
-                color: black !important;
-            }
-            body * {
-                visibility: hidden;
-            }
-            #printableArea, #printableArea * {
-                visibility: visible;
-            }
-            #printableArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .container {
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                gap: 0 !important;
-            }
-            #printableArea .box-score-table th, #printableArea .box-score-table td {
-                border: 1px solid #ccc;
-                color: black;
-            }
-             #printableArea .box-score-table th {
-                background-color: #eee !important;
-             }
-            .mobile-scroll-container {
-                overflow-x: visible !important;
-            }
-            .hidden-print {
-                display: none !important;
-            }
-            .visible-print {
-                display: block !important;
             }
         }
     </style>
@@ -356,6 +326,7 @@
                      <button data-period="1st" class="period-btn w-12 h-12 text-lg rounded-full">1</button>
                      <button data-period="2nd" class="period-btn w-12 h-12 text-lg rounded-full">2</button>
                      <button data-period="3rd" class="period-btn w-12 h-12 text-lg rounded-full">3</button>
+                     <button data-period="OT" class="period-btn w-12 h-12 text-lg rounded-full">OT</button>
                 </div>
             </div>
             <div class="flex justify-center space-x-4">
@@ -383,6 +354,8 @@
             <p class="text-sm text-red-200">The app cannot connect to the database until this is resolved.</p>
         </div>
     </div>
+    
+    <div id="pdf-render-area"></div>
 
     <div class="container">
         <div class="flex items-center justify-center">
@@ -486,47 +459,37 @@
                     <button id="undoButton" class="undo-btn px-6 py-2 rounded-lg">Undo Last Stat</button>
                 </div>
             </div>
-            <div id="printableArea">
-                <div class="visible-print hidden">
-                    <h2 id="printTitle" class="text-xl font-bold text-center mb-2"></h2>
-                    <div id="printableScoreboard" class="text-center mb-4 text-lg"></div>
-                    <div id="printableAiSummary" class="p-4 border rounded-lg my-4" style="border-color: #ccc;">
-                        <h3 class="font-bold text-lg mb-2">Game Summary</h3>
-                        <p id="printableAiSummaryContent"></p>
-                    </div>
+            <div id="boxScoreContainer">
+                 <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-semibold">Box Score</h2>
+                    <button id="downloadReportButton" class="print-btn px-4 py-2">Download Report</button>
                 </div>
-                <div class="box-score">
-                     <div class="flex justify-between items-center mb-2 hidden-print">
-                        <h2 class="text-xl font-semibold">Box Score</h2>
-                        <button id="printBoxScoreButton" class="print-btn px-4 py-2">Print Game Report</button>
-                    </div>
-                    <div class="mobile-scroll-container rounded-lg">
-                        <table class="box-score-table">
-                            <thead>
-                                <tr>
-                                    <th class="px-4 py-2">Player</th>
-                                    <th class="px-4 py-2 text-center">Num</th>
-                                    <th class="px-4 py-2 text-center">G</th>
-                                    <th class="px-4 py-2 text-center">A</th>
-                                    <th class="px-4 py-2 text-center">SOG</th>
-                                    <th class="px-4 py-2 text-center">MS</th>
-                                    <th class="px-4 py-2 text-center">+/-</th>
-                                    <th class="px-4 py-2 text-center">Pen</th>
-                                    <th class="px-4 py-2 text-center">TKA</th>
-                                    <th class="px-4 py-2 text-center">TO</th>
-                                    <th class="px-4 py-2 text-center">Saves</th>
-                                    <th class="px-4 py-2 text-center">GA</th>
-                                    <th class="px-4 py-2 text-center">SV%</th>
-                                    <th class="px-4 py-2 text-center">Blocks</th>
-                                    <th class="px-4 py-2 text-center">FOW</th>
-                                    <th class="px-4 py-2 text-center">FOL</th>
-                                </tr>
-                            </thead>
-                            <tbody id="boxScoreBody">
-                                <tr><td colspan="16" class="text-center text-gray-400">No stats yet.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="mobile-scroll-container rounded-lg">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2">Player</th>
+                                <th class="px-4 py-2 text-center">Num</th>
+                                <th class="px-4 py-2 text-center">G</th>
+                                <th class="px-4 py-2 text-center">A</th>
+                                <th class="px-4 py-2 text-center">SOG</th>
+                                <th class="px-4 py-2 text-center">MS</th>
+                                <th class="px-4 py-2 text-center">+/-</th>
+                                <th class="px-4 py-2 text-center">Pen</th>
+                                <th class="px-4 py-2 text-center">TKA</th>
+                                <th class="px-4 py-2 text-center">TO</th>
+                                <th class="px-4 py-2 text-center">Saves</th>
+                                <th class="px-4 py-2 text-center">GA</th>
+                                <th class="px-4 py-2 text-center">SV%</th>
+                                <th class="px-4 py-2 text-center">Blocks</th>
+                                <th class="px-4 py-2 text-center">FOW</th>
+                                <th class="px-4 py-2 text-center">FOL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boxScoreBody">
+                            <tr><td colspan="16" class="text-center text-gray-400">No stats yet.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="mt-6 flex justify-center">
@@ -581,7 +544,7 @@
         import { getFirestore, doc, onSnapshot, setDoc, updateDoc, getDoc, runTransaction, collection, getDocs, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('load', () => {
             setLogLevel('Debug');
 
             // Firebase configuration keys
@@ -659,13 +622,12 @@
             const opponentScoreDisplay = document.getElementById('opponentScoreDisplay');
             const opponentScoreLabel = document.getElementById('opponentScoreLabel');
             const printBoxScoreButton = document.getElementById('printBoxScoreButton');
-            const printTitle = document.getElementById('printTitle');
-            const printableScoreboard = document.getElementById('printableScoreboard');
+            const pdfRenderArea = document.getElementById('pdf-render-area');
             const gameLogOutput = document.getElementById('gameLogOutput');
             
             let playersData = {};
             let gameDetails = {};
-            let history = [];
+            let gameHistory = [];
             let userId = null;
             let teamId = appId;
             let currentGameId = null;
@@ -946,11 +908,11 @@
             
             function renderGameLog() {
                 gameLogOutput.innerHTML = '';
-                if(history.length === 0) {
+                if(gameHistory.length === 0) {
                     gameLogOutput.innerHTML = '<p class="text-gray-400">Game events will appear here...</p>';
                     return;
                 }
-                const sortedHistory = [...history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const sortedHistory = [...gameHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 
                  const statDisplayMap = {
                     'Goals': 'Goal', 'Assists': 'Assist', 'ShotsOnGoal': 'Shot on Goal',
@@ -999,13 +961,13 @@
                         const data = docSnap.data();
                         playersData = data.players || {};
                         gameDetails = data.gameDetails || {};
-                        history = data.history || [];
+                        gameHistory = data.history || [];
                         updateGameInfoUI();
                     } else {
                         playersData = {};
-                        gameDetails = { opponent: '', date: '', time: '', eaglesScore: 0, opponentScore: 0, currentPeriod: '1st'};
-                        history = [];
-                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, history: history });
+                        gameDetails = { opponent: '', date: '', time: '', eaglesScore: 0, opponentScore: 0};
+                        gameHistory = [];
+                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, history: gameHistory });
                     }
                     renderUI();
                 }, (error) => {
@@ -1090,12 +1052,12 @@
                     return;
                 }
 
-                const newGameId = `${date}-${opponent.replace(/\s+/g, '-')}`;
+                const newGameId = `${date}-${time}-${opponent.replace(/\s+/g, '-')}`;
                 const newGameRef = doc(db, `/artifacts/${teamId}/public/data/games/${newGameId}`);
                 
                 const existingGame = await getDoc(newGameRef);
                 if (existingGame.exists()) {
-                    showFeedback('A game with this opponent and date already exists.', 'error');
+                    showFeedback('A game with this opponent and date/time already exists.', 'error');
                     return;
                 }
                 
@@ -1108,8 +1070,7 @@
                         time: time, 
                         finalized: false,
                         eaglesScore: 0,
-                        opponentScore: 0,
-                        currentPeriod: '1st'
+                        opponentScore: 0
                     },
                     players: initialRoster,
                     history: []
@@ -1190,7 +1151,7 @@
                             increment: incrementValue, valueBefore: currentStatValue
                         };
 
-                        if (statType === 'Goals' || statType === 'Minus' || statType === 'Plus') {
+                        if (statType === 'Goals') {
                              logEntry.period = details.period;
                              logEntry.time = details.time;
                         }
@@ -1212,13 +1173,12 @@
                             updates[`players.${goalieName}.GoalsAgainst`] = currentGA + 1;
                             newHistoryEntries.push({
                                 timestamp, action: 'stat_update', playerName: goalieName, statType: 'GoalsAgainst',
-                                increment: 1, valueBefore: currentGA,
-                                period: details.period, time: details.time
+                                increment: 1, valueBefore: currentGA
                             });
                         }
                     }
                     
-                    updates.history = [...history, ...newHistoryEntries];
+                    updates.history = [...gameHistory, ...newHistoryEntries];
                     await updateDoc(gameDocRef, updates);
                     
                     const statMap = {
@@ -1233,7 +1193,7 @@
                     renderUI();
                 };
 
-                if (statType === 'Goals' || statType === 'Minus' || statType === 'Plus') {
+                if (statType === 'Goals') {
                     showGoalDetailsModal(performUpdate);
                 } else {
                     performUpdate({});
@@ -1245,14 +1205,14 @@
                     showFeedback('This game is locked and cannot be edited.', 'error');
                     return;
                 }
-                if (!gameDocRef || history.length === 0) {
+                if (!gameDocRef || gameHistory.length === 0) {
                     showFeedback('No actions to undo.', 'error');
                     return;
                 }
 
-                const lastActionTimestamp = history[history.length - 1].timestamp;
-                const actionsToUndo = history.filter(action => action.timestamp === lastActionTimestamp);
-                const remainingHistory = history.filter(action => action.timestamp !== lastActionTimestamp);
+                const lastActionTimestamp = gameHistory[gameHistory.length - 1].timestamp;
+                const actionsToUndo = gameHistory.filter(action => action.timestamp === lastActionTimestamp);
+                const remainingHistory = gameHistory.filter(action => action.timestamp !== lastActionTimestamp);
 
                 const updates = {};
                 let eaglesGoalsToUndo = 0;
@@ -1411,7 +1371,7 @@
                                 gameDocRef = null;
                                 playersData = {};
                                 gameDetails = {};
-                                history = [];
+                                gameHistory = [];
                                 updateGameInfoUI();
                                 switchTab('gameManagement');
                             }
@@ -1549,23 +1509,69 @@
                 renderUI();
             }
 
-            function printBoxScore() {
+            async function downloadReport() {
                 if (!currentGameId) {
-                    showFeedback('Load a game to print its box score.', 'error');
+                    showFeedback('Load a game to download its report.', 'error');
                     return;
                 }
+                loadingSpinner.classList.remove('hidden');
                 
-                let titleText = `Box Score: Eagles vs ${gameDetails.opponent} - ${gameDetails.date}`;
-                printTitle.textContent = titleText;
-                
-                printableScoreboard.innerHTML = `
-                    <div style="text-align: center; margin-bottom: 20px; font-size: 24px; font-weight: bold;">
-                        <span>Eagles: ${gameDetails.eaglesScore || 0}</span>
-                        <span style="margin: 0 20px;">-</span>
-                        <span>${gameDetails.opponent || 'Opponent'}: ${gameDetails.opponentScore || 0}</span>
-                    </div>
+                const reportContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Game Report: Eagles vs ${gameDetails.opponent}</title>
+                        <style>
+                            body { font-family: sans-serif; margin: 2em; }
+                            .report-container { max-width: 1000px; margin: auto; }
+                            .box-score-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                            .box-score-table th, .box-score-table td { border: 1px solid #ccc; padding: 4px 6px; text-align: left;}
+                            .box-score-table th { background-color: #f3f4f6; }
+                            .text-center { text-align: center; }
+                            .game-log { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; background: #f9fafb; font-size: 12px; }
+                            .log-entry { padding: 4px 0; border-bottom: 1px solid #eee; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-container">
+                             <h1 style="font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 8px;">Game Report</h1>
+                             <h2 style="font-size: 18px; text-align: center; color: #555; margin-bottom: 16px;">Eagles vs ${gameDetails.opponent} - ${gameDetails.date}</h2>
+                             <div style="text-align: center; margin-bottom: 24px; font-size: 28px; font-weight: bold;">
+                                <span>Eagles: ${gameDetails.eaglesScore || 0}</span>
+                                <span style="margin: 0 20px;">-</span>
+                                <span>${gameDetails.opponent || 'Opponent'}: ${gameDetails.opponentScore || 0}</span>
+                            </div>
+
+                            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Game Log</h3>
+                            <div class="game-log">
+                                ${gameLogOutput.innerHTML}
+                            </div>
+
+                            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Box Score</h3>
+                            <div class="overflow-x-auto rounded-lg border">
+                                ${document.querySelector('#boxScoreContainer .mobile-scroll-container').innerHTML}
+                            </div>
+                        </div>
+                    </body>
+                    </html>
                 `;
-                window.print();
+
+                try {
+                    const blob = new Blob([reportContent], { type: 'text/html' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `GameReport-${gameDetails.date}-${gameDetails.opponent}.html`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (error) {
+                     console.error("Error generating report:", error);
+                    showFeedback('Failed to download report.', 'error');
+                } finally {
+                    loadingSpinner.classList.add('hidden');
+                }
             }
 
             async function toggleGoalieStatus(playerName) {
@@ -1599,9 +1605,12 @@
                     if (!currentGameId) { showFeedback('Please create or load a game first.', 'error'); return; }
                     switchTab('setup');
                 });
-                tabs.inGame.addEventListener('click', () => {
-                    if (!currentGameId) { showFeedback('Please create or load a game first.', 'error'); return; }
-                    switchTab('inGame');
+                tabs.inGame.addEventListener('click', (e) => {
+                    if (!e.target.closest('button') && currentGameId) {
+                        switchTab('inGame');
+                    } else if (!currentGameId) {
+                         showFeedback('Please create or load a game first.', 'error');
+                    }
                 });
                  tabs.allTimeStats.addEventListener('click', () => {
                     showPinModal(() => {
@@ -1632,7 +1641,7 @@
                     
                     const loadTheGame = () => {
                         loadGame(gameId);
-                        switchTab('inGame');
+                        switchTab('setup');
                     };
 
                     if (isLocked || gameDate < today) {
@@ -1674,14 +1683,22 @@
                         const team = e.target.dataset.team;
                         const increment = parseInt(e.target.dataset.inc);
                         updateScore(team, increment);
+                    } else if (e.target.id === 'printBoxScoreButton') {
+                        downloadReport();
                     }
                 });
 
 
                 if (undoButton) undoButton.addEventListener('click', undoLastAction);
                 if (finalizeGameButton) finalizeGameButton.addEventListener('click', finalizeGame);
-                if (startGameButton) startGameButton.addEventListener('click', () => switchTab('inGame'));
-                if (printBoxScoreButton) printBoxScoreButton.addEventListener('click', printBoxScore);
+                if (startGameButton) startGameButton.addEventListener('click', () => {
+                    const hasGoalie = Object.values(playersData).some(p => p.isGoalie);
+                    if (!hasGoalie) {
+                        showFeedback('Please designate a goalie before starting the game.', 'error');
+                        return;
+                    }
+                    switchTab('inGame')
+                });
                 
                 goalTimeInput.addEventListener('input', (e) => {
                     let value = e.target.value.replace(/\D/g, '');
