@@ -11,7 +11,7 @@
     <style id="appStyles">
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a2a45; /* Navy */
+            background-color: #1a2a4s5; /* Navy */
             color: #CBD5E0;
             display: flex;
             justify-content: center;
@@ -87,6 +87,18 @@
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.875rem;
+        }
+         .box-score-table th.sortable-header {
+            cursor: pointer;
+        }
+        .box-score-table th.sortable-header:hover {
+            background-color: #334155;
+        }
+        .box-score-table th.sort-asc::after {
+            content: ' ▲';
+        }
+        .box-score-table th.sort-desc::after {
+            content: ' ▼';
         }
         .box-score-table tr:hover {
             background-color: #1E293B;
@@ -317,9 +329,16 @@
     <div id="goalDetailsModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
         <div class="bg-[#1E293B] p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
             <p class="mb-4 text-lg font-bold">Enter Goal Details</p>
+             <div id="goalScorerDisplay" class="mb-4 text-lg text-white"></div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-400">Assists (Max 2)</label>
+                <div id="assistSelector" class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-[#1a2a45] rounded-lg">
+                    <!-- Player assist toggles will be generated here -->
+                </div>
+            </div>
             <div class="mb-4">
                 <label for="goalTimeInput" class="block text-sm font-medium text-gray-400">Time of Goal (MMSS)</label>
-                <input type="tel" id="goalTimeInput" class="input-field w-full mt-1 text-center text-xl" maxlength="5">
+                <input type="tel" id="goalTimeInput" class="input-field w-full mt-1 text-center text-xl" maxlength="5" inputmode="numeric" pattern="[0-9]*">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-400">Period</label>
@@ -510,28 +529,55 @@
                 <h2 class="text-xl font-semibold mb-2">All-Time Totals</h2>
                 <div class="mobile-scroll-container rounded-lg">
                     <table class="box-score-table">
-                        <thead>
+                        <thead id="allTimeTotalsHeader">
                             <tr>
-                                <th class="px-4 py-2">Player</th>
-                                <th class="px-4 py-2 text-center">Games</th>
-                                <th class="px-4 py-2 text-center">G</th>
-                                <th class="px-4 py-2 text-center">A</th>
-                                <th class="px-4 py-2 text-center">SOG</th>
-                                <th class="px-4 py-2 text-center">MS</th>
-                                <th class="px-4 py-2 text-center">+/-</th>
-                                <th class="px-4 py-2 text-center">Pen</th>
-                                <th class="px-4 py-2 text-center">TKA</th>
-                                <th class="px-4 py-2 text-center">TO</th>
-                                <th class="px-4 py-2 text-center">Saves</th>
-                                 <th class="px-4 py-2 text-center">GA</th>
-                                <th class="px-4 py-2 text-center">SV%</th>
-                                <th class="px-4 py-2 text-center">Blocks</th>
-                                <th class="px-4 py-2 text-center">FOW</th>
-                                <th class="px-4 py-2 text-center">FOL</th>
+                                <th class="px-4 py-2 sortable-header" data-sort="name">Player</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="gamesPlayed">Games</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Goals">G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Assists">A</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="ShotsOnGoal">SOG</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="MissedShots">MS</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="plus_minus">+/-</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Penalties">Pen</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Takeaways">TKA</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Turnovers">TO</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Saves">Saves</th>
+                                 <th class="px-4 py-2 text-center sortable-header" data-sort="GoalsAgainst">GA</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="svPct">SV%</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Blocks">Blocks</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="FaceoffWins">FOW</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="FaceoffLosses">FOL</th>
                             </tr>
                         </thead>
                         <tbody id="allTimeTotalsBody">
                             <tr><td colspan="16" class="text-center text-gray-400">No stats yet. Finalize a game to see totals.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+             <div class="box-score mt-8">
+                <h2 class="text-xl font-semibold mb-2">All-Time Averages</h2>
+                 <div class="mobile-scroll-container rounded-lg">
+                    <table class="box-score-table">
+                        <thead id="allTimeAveragesHeader">
+                            <tr>
+                                <th class="px-4 py-2 sortable-header" data-sort="name">Player</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="gamesPlayed">Games</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="G/G">G/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="A/G">A/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="SOG/G">SOG/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="MS/G">MS/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="+/-/G">+/-/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Pen/G">Pen/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="TKA/G">TKA/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="TO/G">TO/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Saves/G">Saves/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="Blocks/G">Blocks/G</th>
+                                <th class="px-4 py-2 text-center sortable-header" data-sort="FOW%">FOW%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTimeAveragesBody">
+                            <tr><td colspan="13" class="text-center text-gray-400">No stats yet. Finalize a game to see averages.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -599,6 +645,8 @@
             const deleteGameButton = document.getElementById('deleteGameButton');
             const loadGameIdSelect = document.getElementById('loadGameIdSelect');
             const currentGameInfo = document.getElementById('currentGameInfo');
+            const allTimeTotalsHeader = document.getElementById('allTimeTotalsHeader');
+            const allTimeAveragesHeader = document.getElementById('allTimeAveragesHeader');
             const allTimeTotalsBody = document.getElementById('allTimeTotalsBody');
             const allTimeAveragesBody = document.getElementById('allTimeAveragesBody');
             const finalizeGameButton = document.getElementById('finalizeGameButton');
@@ -612,6 +660,8 @@
             const pinCancel = document.getElementById('pinCancel');
             const pinInput = document.getElementById('pinInput');
             const goalDetailsModal = document.getElementById('goalDetailsModal');
+            const goalScorerDisplay = document.getElementById('goalScorerDisplay');
+            const assistSelector = document.getElementById('assistSelector');
             const goalTimeInput = document.getElementById('goalTimeInput');
             const goalPeriodSelector = document.getElementById('goalPeriodSelector');
             const goalConfirm = document.getElementById('goalConfirm');
@@ -622,13 +672,13 @@
             const eaglesScoreDisplay = document.getElementById('eaglesScoreDisplay');
             const opponentScoreDisplay = document.getElementById('opponentScoreDisplay');
             const opponentScoreLabel = document.getElementById('opponentScoreLabel');
-            const printBoxScoreButton = document.getElementById('printBoxScoreButton');
+            const printBoxScoreButton = document.getElementById('downloadReportButton');
             const pdfRenderArea = document.getElementById('pdf-render-area');
             const gameLogOutput = document.getElementById('gameLogOutput');
             
             let playersData = {};
             let gameDetails = {};
-            let gameHistory = [];
+            let gameLogData = [];
             let userId = null;
             let teamId = appId;
             let currentGameId = null;
@@ -640,6 +690,11 @@
             let gameDataUnsubscribe = null;
             let allTimeDataUnsubscribe = null;
             let appInitialized = false;
+            let allTimeData = {};
+            let totalsSortColumn = 'gamesPlayed';
+            let totalsSortDirection = 'desc';
+            let averagesSortColumn = 'gamesPlayed';
+            let averagesSortDirection = 'desc';
             
             const statFields = ['Goals', 'Assists', 'ShotsOnGoal', 'MissedShots', 'plus_minus', 'Penalties', 'Takeaways', 'Turnovers', 'Saves', 'GoalsAgainst', 'Blocks', 'FaceoffWins', 'FaceoffLosses'];
 
@@ -706,7 +761,9 @@
             }
 
             function showGoalDetailsModal(callback) {
+                goalScorerDisplay.textContent = `Goal by: ${selectedPlayers.join(', ')}`;
                 goalTimeInput.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
                 const periodButtons = goalPeriodSelector.querySelectorAll('.period-btn');
                 let selectedPeriod = '1st';
                 
@@ -721,10 +778,35 @@
                     }
                 };
 
+                assistSelector.innerHTML = '';
+                const availableAssisters = Object.keys(playersData).filter(p => !selectedPlayers.includes(p));
+                availableAssisters.forEach(name => {
+                    const player = playersData[name];
+                    const playerEl = document.createElement('div');
+                    playerEl.innerHTML = `
+                        <label class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700 cursor-pointer">
+                            <input type="checkbox" value="${name}" class="assist-checkbox h-5 w-5 rounded text-blue-500 bg-gray-800 border-gray-600 focus:ring-blue-600">
+                            <span>${name} #${player.Number}</span>
+                        </label>
+                    `;
+                    assistSelector.appendChild(playerEl);
+                });
+                
+                assistSelector.onchange = (event) => {
+                     const checked = assistSelector.querySelectorAll('.assist-checkbox:checked');
+                     if (checked.length > 2) {
+                        showFeedback('Maximum of 2 assists allowed.', 'error');
+                        event.target.checked = false;
+                     }
+                };
+
                 goalDetailsModal.classList.remove('hidden');
 
                 goalConfirm.onclick = () => {
+                    const assists = Array.from(assistSelector.querySelectorAll('.assist-checkbox:checked')).map(cb => cb.value);
                     const details = {
+                        goalScorers: selectedPlayers,
+                        assists,
                         time: goalTimeInput.value,
                         period: selectedPeriod
                     };
@@ -756,7 +838,7 @@
                 feedbackMessage.style.backgroundColor = type === 'success' ? 'rgba(34, 197, 94, 0.95)' : 'rgba(220, 38, 38, 0.9)';
                 feedbackTimeout = setTimeout(() => {
                     feedbackMessage.classList.remove('show');
-                }, 2500);
+                }, 1500);
             }
 
             function renderUI() {
@@ -869,42 +951,125 @@
                 opponentScoreLabel.textContent = gameDetails.opponent ? gameDetails.opponent.toUpperCase() : 'OPPONENT';
             }
 
-            function renderAllTimeStats(allTimeData) {
-                const playerNames = Object.keys(allTimeData.players || {}).sort((a, b) => {
-                    const lastNameA = a.split(' ').pop();
-                    const lastNameB = b.split(' ').pop();
-                    return lastNameA.localeCompare(lastNameB);
-                });
-                allTimeTotalsBody.innerHTML = '';
+            function renderAllTimeStats() {
+                 if (!allTimeData || !allTimeData.players) {
+                    allTimeTotalsBody.innerHTML = '<tr><td colspan="16" class="text-center text-gray-400">No stats yet. Finalize a game to see totals.</td></tr>';
+                    allTimeAveragesBody.innerHTML = '<tr><td colspan="13" class="text-center text-gray-400">No stats yet. Finalize a game to see averages.</td></tr>';
+                    return;
+                }
 
-                if (playerNames.length === 0) {
-                     allTimeTotalsBody.innerHTML = '<tr><td colspan="16" class="text-center text-gray-400">No stats yet. Finalize a game to see totals.</td></tr>';
-                } else {
-                    playerNames.forEach(name => {
-                        const player = allTimeData.players[name];
-                        const svPct = calculateSavePercentage(player.Saves, player.GoalsAgainst);
-                        const totalRow = document.createElement('tr');
-                        totalRow.innerHTML = `
-                            <td class="px-4 py-2">${name}</td>
-                            <td class="px-4 py-2 text-center">${player.gamesPlayed || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Goals || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Assists || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.ShotsOnGoal || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.MissedShots || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.plus_minus || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Penalties || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Takeaways || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Turnovers || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.Saves || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.GoalsAgainst || 0}</td>
-                            <td class="px-4 py-2 text-center">${svPct}</td>
-                            <td class="px-4 py-2 text-center">${player.Blocks || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.FaceoffWins || 0}</td>
-                            <td class="px-4 py-2 text-center">${player.FaceoffLosses || 0}</td>
-                        `;
-                        allTimeTotalsBody.appendChild(totalRow);
+                const playersArray = Object.entries(allTimeData.players).map(([name, stats]) => ({ name, ...stats }));
+                
+                // Sorting logic for totals
+                if (totalsSortColumn) {
+                    playersArray.sort((a, b) => {
+                        let valA = a[totalsSortColumn] || 0;
+                        let valB = b[totalsSortColumn] || 0;
+
+                        if (totalsSortColumn === 'svPct') {
+                            valA = calculateSavePercentage(a.Saves, a.GoalsAgainst).replace('.', '');
+                            valB = calculateSavePercentage(b.Saves, b.GoalsAgainst).replace('.', '');
+                        } else if (totalsSortColumn === 'name') {
+                            valA = a.name.toLowerCase();
+                            valB = b.name.toLowerCase();
+                            return totalsSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                        }
+
+                        return totalsSortDirection === 'asc' ? valA - valB : valB - valA;
                     });
                 }
+
+                allTimeTotalsBody.innerHTML = '';
+                playersArray.forEach(player => {
+                    const svPct = calculateSavePercentage(player.Saves, player.GoalsAgainst);
+                    const totalRow = document.createElement('tr');
+                    totalRow.innerHTML = `
+                        <td class="px-4 py-2">${player.name}</td>
+                        <td class="px-4 py-2 text-center">${player.gamesPlayed || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Goals || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Assists || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.ShotsOnGoal || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.MissedShots || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.plus_minus || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Penalties || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Takeaways || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Turnovers || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.Saves || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.GoalsAgainst || 0}</td>
+                        <td class="px-4 py-2 text-center">${svPct}</td>
+                        <td class="px-4 py-2 text-center">${player.Blocks || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.FaceoffWins || 0}</td>
+                        <td class="px-4 py-2 text-center">${player.FaceoffLosses || 0}</td>
+                    `;
+                    allTimeTotalsBody.appendChild(totalRow);
+                });
+
+
+                // Sorting logic for averages
+                const averagesArray = playersArray.map(p => {
+                    const games = p.gamesPlayed || 0;
+                    const fowPct = (p.FaceoffWins || 0) + (p.FaceoffLosses || 0) > 0 ? ((p.FaceoffWins || 0) / ((p.FaceoffWins || 0) + (p.FaceoffLosses || 0))) * 100 : 0;
+                    return {
+                        name: p.name,
+                        gamesPlayed: games,
+                        'G/G': games > 0 ? (p.Goals / games) : 0,
+                        'A/G': games > 0 ? (p.Assists / games) : 0,
+                        'SOG/G': games > 0 ? (p.ShotsOnGoal / games) : 0,
+                        'MS/G': games > 0 ? (p.MissedShots / games) : 0,
+                        '+/-/G': games > 0 ? (p.plus_minus / games) : 0,
+                        'Pen/G': games > 0 ? (p.Penalties / games) : 0,
+                        'TKA/G': games > 0 ? (p.Takeaways / games) : 0,
+                        'TO/G': games > 0 ? (p.Turnovers / games) : 0,
+                        'Saves/G': games > 0 ? (p.Saves / games) : 0,
+                        'Blocks/G': games > 0 ? (p.Blocks / games) : 0,
+                        'FOW%': fowPct
+                    };
+                });
+
+                if (averagesSortColumn) {
+                    averagesArray.sort((a, b) => {
+                        let valA = a[averagesSortColumn] || 0;
+                        let valB = b[averagesSortColumn] || 0;
+                        if (averagesSortColumn === 'name') {
+                            return averagesSortDirection === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+                        }
+                        return averagesSortDirection === 'asc' ? valA - valB : valB - valA;
+                    });
+                }
+                
+                allTimeAveragesBody.innerHTML = '';
+                averagesArray.forEach(playerAvg => {
+                    const row = document.createElement('tr');
+                     row.innerHTML = `
+                        <td class="px-4 py-2">${playerAvg.name}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg.gamesPlayed}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['G/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['A/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['SOG/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['MS/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['+/-/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['Pen/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['TKA/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['TO/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['Saves/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['Blocks/G'].toFixed(2)}</td>
+                        <td class="px-4 py-2 text-center">${playerAvg['FOW%'].toFixed(1)}%</td>
+                    `;
+                    allTimeAveragesBody.appendChild(row);
+                });
+                
+                updateSortHeaders();
+            }
+            
+            function updateSortHeaders() {
+                document.querySelectorAll('.sortable-header').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                });
+                const totalHeader = allTimeTotalsHeader.querySelector(`[data-sort="${totalsSortColumn}"]`);
+                if (totalHeader) totalHeader.classList.add(`sort-${totalsSortDirection}`);
+                
+                const avgHeader = allTimeAveragesHeader.querySelector(`[data-sort="${averagesSortColumn}"]`);
+                if (avgHeader) avgHeader.classList.add(`sort-${averagesSortDirection}`);
             }
             
             function renderGameLog() {
@@ -954,7 +1119,7 @@
                     gameDataUnsubscribe();
                 }
                 currentGameId = gameId;
-                gameDocRef = doc(db, `/artifacts/${teamId}/public/data/games/${currentGameId}`);
+                gameDocRef = doc(db, `/artifacts/${teamId}/public/data/games/${gameId}`);
                 
                 gameDataUnsubscribe = onSnapshot(gameDocRef, (docSnap) => {
                     loadingSpinner.classList.add('hidden');
@@ -962,13 +1127,13 @@
                         const data = docSnap.data();
                         playersData = data.players || {};
                         gameDetails = data.gameDetails || {};
-                        gameHistory = data.history || [];
+                        gameHistory = data.gameLog || [];
                         updateGameInfoUI();
                     } else {
                         playersData = {};
                         gameDetails = { opponent: '', date: '', time: '', eaglesScore: 0, opponentScore: 0};
                         gameHistory = [];
-                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, history: gameHistory });
+                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, gameLog: gameHistory });
                     }
                     renderUI();
                 }, (error) => {
@@ -1012,10 +1177,11 @@
                 const allTimeDocRef = doc(db, `/artifacts/${teamId}/public/data/playerTotals/data`);
                 allTimeDataUnsubscribe = onSnapshot(allTimeDocRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        const allTimeData = docSnap.data() || {};
-                        renderAllTimeStats(allTimeData);
+                        allTimeData = docSnap.data() || {};
+                        renderAllTimeStats();
                     } else {
-                        renderAllTimeStats({});
+                        allTimeData = {};
+                        renderAllTimeStats();
                     }
                 }, (error) => {
                     console.error("Error getting all-time data:", error);
@@ -1030,6 +1196,7 @@
                     "Sammy Garavaglia": { "Number": "74", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
                     "Jackson Gilkeson": { "Number": "30", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
                     "Noah Gones":       { "Number": "8",  "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
+                    "Braden Parr":      { "Number": "34", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
                     "Andrew Tarantola": { "Number": "36", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
                     "Elijah Underwood": { "Number": "20", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
                     "Baylor Vasel":     { "Number": "23", "Goals": 0, "Assists": 0, "ShotsOnGoal": 0, "MissedShots": 0, "plus_minus": 0, "Penalties": 0, "Takeaways": 0, "Turnovers": 0, "Saves": 0, "GoalsAgainst": 0, "Blocks": 0, "FaceoffWins": 0, "FaceoffLosses": 0, "isGoalie": false },
@@ -1074,7 +1241,7 @@
                         opponentScore: 0
                     },
                     players: initialRoster,
-                    history: []
+                    gameLog: []
                 });
                 showFeedback(`New game created!`);
                 loadGame(newGameId);
@@ -1129,57 +1296,61 @@
                     const updates = {};
                     const newHistoryEntries = [];
                     const timestamp = new Date().toISOString();
-                    let feedbackPlayerNames = selectedPlayers.join(', ');
-
-                    selectedPlayers.forEach(playerName => {
-                        let fieldToUpdate = '';
-                        let incrementValue = 1;
-
-                        if (statType === 'Plus') {
-                            fieldToUpdate = 'plus_minus';
-                        } else if (statType === 'Minus') {
-                            fieldToUpdate = 'plus_minus';
-                            incrementValue = -1;
-                        } else {
-                            fieldToUpdate = statType;
-                        }
-
-                        const currentStatValue = playersData[playerName]?.[fieldToUpdate] || 0;
-                        updates[`players.${playerName}.${fieldToUpdate}`] = currentStatValue + incrementValue;
-                        
-                        const logEntry = {
-                            timestamp, action: 'stat_update', playerName, statType: fieldToUpdate,
-                            increment: incrementValue, valueBefore: currentStatValue
-                        };
-
-                        if (statType === 'Goals') {
-                             logEntry.period = details.period;
-                             logEntry.time = details.time;
-                        }
-                        
-                        newHistoryEntries.push(logEntry);
-                    });
                     
-                    if (statType === 'Goals') {
-                         const currentEaglesScore = gameDetails.eaglesScore || 0;
-                         updates['gameDetails.eaglesScore'] = currentEaglesScore + selectedPlayers.length;
-                    }
+                    const allPlayersInvolved = details.goalScorers ? [...details.goalScorers, ...details.assists] : selectedPlayers;
+                    let feedbackPlayerNames = allPlayersInvolved.join(', ');
 
-                    if (statType === 'Minus') {
-                        const currentOpponentScore = gameDetails.opponentScore || 0;
-                        updates['gameDetails.opponentScore'] = currentOpponentScore + 1;
-                        const goalieName = Object.keys(playersData).find(name => playersData[name].isGoalie);
-                        if (goalieName) {
-                            const currentGA = playersData[goalieName].GoalsAgainst || 0;
-                            updates[`players.${goalieName}.GoalsAgainst`] = currentGA + 1;
-                            newHistoryEntries.push({
-                                timestamp, action: 'stat_update', playerName: goalieName, statType: 'GoalsAgainst',
-                                increment: 1, valueBefore: currentGA
+                    if (details.goalScorers) { // This is a goal event
+                        details.goalScorers.forEach(scorer => {
+                            const currentGoals = playersData[scorer]?.Goals || 0;
+                            updates[`players.${scorer}.Goals`] = currentGoals + 1;
+                            const currentSOG = playersData[scorer]?.ShotsOnGoal || 0;
+                            updates[`players.${scorer}.ShotsOnGoal`] = currentSOG + 1;
+
+                             newHistoryEntries.push({
+                                timestamp, action: 'stat_update', playerName: scorer, statType: 'Goals',
+                                increment: 1, valueBefore: currentGoals,
+                                period: details.period, time: details.time
                             });
-                        }
+                        });
+                        details.assists.forEach(assister => {
+                             const currentAssists = playersData[assister]?.Assists || 0;
+                             updates[`players.${assister}.Assists`] = currentAssists + 1;
+                             newHistoryEntries.push({
+                                timestamp, action: 'stat_update', playerName: assister, statType: 'Assists',
+                                increment: 1, valueBefore: currentAssists
+                            });
+                        });
+                        const currentEaglesScore = gameDetails.eaglesScore || 0;
+                        updates['gameDetails.eaglesScore'] = currentEaglesScore + details.goalScorers.length;
+
+                    } else { // This is a non-goal event
+                         selectedPlayers.forEach(playerName => {
+                            let fieldToUpdate = '';
+                            let incrementValue = 1;
+
+                            if (statType === 'Plus') {
+                                fieldToUpdate = 'plus_minus';
+                            } else if (statType === 'Minus') {
+                                fieldToUpdate = 'plus_minus';
+                                incrementValue = -1;
+                            } else {
+                                fieldToUpdate = statType;
+                            }
+
+                            const currentStatValue = playersData[playerName]?.[fieldToUpdate] || 0;
+                            updates[`players.${playerName}.${fieldToUpdate}`] = currentStatValue + incrementValue;
+                            
+                            const logEntry = {
+                                timestamp, action: 'stat_update', playerName, statType: fieldToUpdate,
+                                increment: incrementValue, valueBefore: currentStatValue
+                            };
+                            
+                            newHistoryEntries.push(logEntry);
+                        });
                     }
                     
-                    updates.history = [...gameHistory, ...newHistoryEntries];
+                    updates.gameLog = [...gameHistory, ...newHistoryEntries];
                     await updateDoc(gameDocRef, updates);
                     
                     const statMap = {
@@ -1189,12 +1360,17 @@
                         'Blocks': 'Block', 'FaceoffWins': 'Faceoff Win', 'FaceoffLosses': 'Faceoff Loss'
                     };
                     
-                    showFeedback(`${statMap[statType]} for ${feedbackPlayerNames}`);
+                    const feedbackStat = statType === 'Goals' ? `Goal by ${details.goalScorers.join(', ')}` : `${statMap[statType]} for ${feedbackPlayerNames}`;
+                    showFeedback(feedbackStat);
                     selectedPlayers = [];
                     renderUI();
                 };
 
                 if (statType === 'Goals') {
+                     if (selectedPlayers.length > 1) {
+                        showFeedback('Please select only one goal scorer at a time.', 'error');
+                        return;
+                    }
                     showGoalDetailsModal(performUpdate);
                 } else {
                     performUpdate({});
@@ -1223,6 +1399,8 @@
                     updates[`players.${action.playerName}.${action.statType}`] = action.valueBefore;
                     if (action.statType === 'Goals') {
                         eaglesGoalsToUndo++;
+                        const currentSOG = playersData[action.playerName]?.ShotsOnGoal || 1;
+                        updates[`players.${action.playerName}.ShotsOnGoal`] = currentSOG - 1;
                     }
                     if (action.statType === 'GoalsAgainst') {
                         opponentGoalsToUndo++;
@@ -1240,7 +1418,7 @@
                 try {
                     await updateDoc(gameDocRef, {
                         ...updates,
-                        history: remainingHistory
+                        gameLog: remainingHistory
                     });
                     const playerNames = [...new Set(actionsToUndo.map(a => a.playerName))].join(', ');
                     showFeedback(`Undid last action for ${playerNames}.`);
@@ -1642,7 +1820,7 @@
                     
                     const loadTheGame = () => {
                         loadGame(gameId);
-                        switchTab('setup');
+                        switchTab('inGame');
                     };
 
                     if (isLocked || gameDate < today) {
@@ -1692,14 +1870,7 @@
 
                 if (undoButton) undoButton.addEventListener('click', undoLastAction);
                 if (finalizeGameButton) finalizeGameButton.addEventListener('click', finalizeGame);
-                if (startGameButton) startGameButton.addEventListener('click', () => {
-                    const hasGoalie = Object.values(playersData).some(p => p.isGoalie);
-                    if (!hasGoalie) {
-                        showFeedback('Please designate a goalie before starting the game.', 'error');
-                        return;
-                    }
-                    switchTab('inGame')
-                });
+                if (startGameButton) startGameButton.addEventListener('click', () => switchTab('inGame'));
                 
                 goalTimeInput.addEventListener('input', (e) => {
                     let value = e.target.value.replace(/\D/g, '');
@@ -1717,6 +1888,34 @@
                     timeInputCreate.value = time;
                 }
                 setInitialDateTime();
+
+                allTimeTotalsHeader.addEventListener('click', (e) => {
+                    const target = e.target.closest('.sortable-header');
+                    if (!target) return;
+                    
+                    const sortKey = target.dataset.sort;
+                    if (totalsSortColumn === sortKey) {
+                        totalsSortDirection = totalsSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        totalsSortColumn = sortKey;
+                        totalsSortDirection = 'desc';
+                    }
+                    renderAllTimeStats();
+                });
+
+                allTimeAveragesHeader.addEventListener('click', (e) => {
+                    const target = e.target.closest('.sortable-header');
+                    if (!target) return;
+                    
+                    const sortKey = target.dataset.sort;
+                    if (averagesSortColumn === sortKey) {
+                        averagesSortDirection = averagesSortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        averagesSortColumn = sortKey;
+                        averagesSortDirection = 'desc';
+                    }
+                    renderAllTimeStats();
+                });
             }
         });
     </script>
