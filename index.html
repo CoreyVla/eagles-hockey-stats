@@ -211,7 +211,7 @@
             font-weight: bold;
             width: 90%;
             max-width: 450px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            pointer-events: none;
         }
         .feedback-message.show {
             opacity: 1;
@@ -337,8 +337,12 @@
                 </div>
             </div>
             <div class="mb-4">
-                <label for="goalTimeInput" class="block text-sm font-medium text-gray-400">Time of Goal (MMSS)</label>
-                <input type="tel" id="goalTimeInput" class="input-field w-full mt-1 text-center text-xl" maxlength="5" inputmode="numeric" pattern="[0-9]*">
+                <label class="block text-sm font-medium text-gray-400">Time of Goal</label>
+                <div class="flex items-center justify-center space-x-2">
+                    <input type="number" id="goalTimeMinutes" class="input-field w-20 text-center text-xl" placeholder="MM" min="0" max="60">
+                    <span class="text-xl">:</span>
+                    <input type="number" id="goalTimeSeconds" class="input-field w-20 text-center text-xl" placeholder="SS" min="0" max="59">
+                </div>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-400">Period</label>
@@ -662,7 +666,8 @@
             const goalDetailsModal = document.getElementById('goalDetailsModal');
             const goalScorerDisplay = document.getElementById('goalScorerDisplay');
             const assistSelector = document.getElementById('assistSelector');
-            const goalTimeInput = document.getElementById('goalTimeInput');
+            const goalTimeMinutes = document.getElementById('goalTimeMinutes');
+            const goalTimeSeconds = document.getElementById('goalTimeSeconds');
             const goalPeriodSelector = document.getElementById('goalPeriodSelector');
             const goalConfirm = document.getElementById('goalConfirm');
             const goalCancel = document.getElementById('goalCancel');
@@ -678,7 +683,7 @@
             
             let playersData = {};
             let gameDetails = {};
-            let gameHistory = [];
+            let gameLogData = [];
             let userId = null;
             let teamId = appId;
             let currentGameId = null;
@@ -762,7 +767,10 @@
 
             function showGoalDetailsModal(callback) {
                 goalScorerDisplay.textContent = `Goal by: ${selectedPlayers.join(', ')}`;
-                goalTimeInput.value = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                 const now = new Date();
+                goalTimeMinutes.value = String(now.getMinutes()).padStart(2, '0');
+                goalTimeSeconds.value = String(now.getSeconds()).padStart(2, '0');
+
 
                 const periodButtons = goalPeriodSelector.querySelectorAll('.period-btn');
                 let selectedPeriod = '1st';
@@ -804,10 +812,12 @@
 
                 goalConfirm.onclick = () => {
                     const assists = Array.from(assistSelector.querySelectorAll('.assist-checkbox:checked')).map(cb => cb.value);
+                    const minutes = String(goalTimeMinutes.value).padStart(2, '0');
+                    const seconds = String(goalTimeSeconds.value).padStart(2, '0');
                     const details = {
                         goalScorers: selectedPlayers,
                         assists,
-                        time: goalTimeInput.value,
+                        time: `${minutes}:${seconds}`,
                         period: selectedPeriod
                     };
                     goalDetailsModal.classList.add('hidden');
@@ -828,7 +838,11 @@
 
                 sections[tab].classList.remove('hidden');
                 tabs[tab].classList.add('active');
-                renderUI();
+                if (tab === 'allTimeStats') {
+                    renderAllTimeStats();
+                } else {
+                    renderUI();
+                }
             }
 
             function showFeedback(message, type = 'success') {
@@ -1074,11 +1088,11 @@
             
             function renderGameLog() {
                 gameLogOutput.innerHTML = '';
-                if(gameHistory.length === 0) {
+                if(gameLogData.length === 0) {
                     gameLogOutput.innerHTML = '<p class="text-gray-400">Game events will appear here...</p>';
                     return;
                 }
-                const sortedHistory = [...gameHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const sortedHistory = [...gameLogData].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 
                  const statDisplayMap = {
                     'Goals': 'Goal', 'Assists': 'Assist', 'ShotsOnGoal': 'Shot on Goal',
@@ -1127,13 +1141,13 @@
                         const data = docSnap.data();
                         playersData = data.players || {};
                         gameDetails = data.gameDetails || {};
-                        gameHistory = data.gameLog || [];
+                        gameLogData = data.gameLog || [];
                         updateGameInfoUI();
                     } else {
                         playersData = {};
                         gameDetails = { opponent: '', date: '', time: '', eaglesScore: 0, opponentScore: 0};
-                        gameHistory = [];
-                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, gameLog: gameHistory });
+                        gameLogData = [];
+                        setDoc(gameDocRef, { players: playersData, gameDetails: gameDetails, gameLog: gameLogData });
                     }
                     renderUI();
                 }, (error) => {
@@ -1872,12 +1886,11 @@
                 if (finalizeGameButton) finalizeGameButton.addEventListener('click', finalizeGame);
                 if (startGameButton) startGameButton.addEventListener('click', () => switchTab('inGame'));
                 
-                goalTimeInput.addEventListener('input', (e) => {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value.length > 2) {
-                        value = value.substring(0, 2) + ':' + value.substring(2, 4);
-                    }
-                    e.target.value = value;
+                goalTimeMinutes.addEventListener('input', (e) => {
+                    if (e.target.value.length > 2) e.target.value = e.target.value.slice(0, 2);
+                });
+                 goalTimeSeconds.addEventListener('input', (e) => {
+                    if (e.target.value.length > 2) e.target.value = e.target.value.slice(0, 2);
                 });
                 
                 function setInitialDateTime() {
